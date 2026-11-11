@@ -56,6 +56,13 @@ type Host struct {
 	trayBadgeLT *qt.QIcon    // black glyph + unread dot
 	trayUnread  int          // last published unread total (Qt thread only)
 	pendingChat store.PeerID // chat a notification click should open
+	appIconPath string       // bundled app icon file — fallback notification icon
+
+	// notifChat maps daemon-issued notification ids to chats for
+	// click-to-open. notifMu guards it — ActionInvoked arrives on a godbus
+	// goroutine while fireNotification writes from the Qt thread.
+	notifMu   sync.Mutex
+	notifChat map[uint32]store.PeerID
 
 	// rvAsked dedupes lazy avatar fetches triggered from reactorWho —
 	// each reactor JID is requested at most once (Qt thread only).
@@ -102,6 +109,12 @@ func NewHost(app *core.App) *Host {
 	_ = os.WriteFile(iconPath, core.IconSVG, 0o644)
 	_ = os.WriteFile(filepath.Join(iconDir, appID+".attention.svg"), core.BadgeSVG(core.IconSVG), 0o644)
 	qt.QGuiApplication_SetWindowIcon(qt.NewQIcon4(iconPath))
+	// Rendered notification avatars from previous runs — dropped here so a
+	// churn of picture changes can't accumulate; regenerated on demand.
+	stale, _ := filepath.Glob(filepath.Join(iconDir, "notif-*.png"))
+	for _, f := range stale {
+		_ = os.Remove(f)
+	}
 
 	// The tray gets the simplified glyph — legible at SNI sizes where the
 	// gradient tile would read as a blob. Two monochrome variants track the
@@ -135,7 +148,9 @@ func NewHost(app *core.App) *Host {
 	}
 
 	h := &Host{app: app, qa: qa, rvAsked: map[store.PeerID]bool{}, acctConn: map[string]string{},
-		trayIconDK: trayIconDK, trayIconLT: trayIconLT, trayBadgeDK: trayBadgeDK, trayBadgeLT: trayBadgeLT}
+		appIconPath: iconPath,
+		notifChat:   map[uint32]store.PeerID{},
+		trayIconDK:  trayIconDK, trayIconLT: trayIconLT, trayBadgeDK: trayBadgeDK, trayBadgeLT: trayBadgeLT}
 	h.cmd = qml.NewQQmlPropertyMap()
 	h.reply = qml.NewQQmlPropertyMap()
 	h.state = qml.NewQQmlPropertyMap()
@@ -221,6 +236,7 @@ func NewHost(app *core.App) *Host {
 
 	h.initTray()
 	h.watchNotifications()
+	h.watchNotifActions()
 	h.watchDesktopTheme()
 	h.watchStatus()
 
