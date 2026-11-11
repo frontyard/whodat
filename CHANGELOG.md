@@ -12,6 +12,8 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-11
+
 ### Added
 - Video and GIF bubbles show the sender-provided first frame as a
   poster while the attachment downloads — the thumbnail ships inside
