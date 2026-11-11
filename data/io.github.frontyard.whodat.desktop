@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=WhoDat
+GenericName=Messaging App
+Comment=Unofficial WhatsApp messaging app for Linux
+Exec=whodat
+Icon=io.github.frontyard.whodat
+Categories=Network;InstantMessaging;
+StartupNotify=true
+StartupWMClass=io.github.frontyard.whodat
+Keywords=whatsapp;chat;messaging;
+X-GNOME-UsesNotifications=true

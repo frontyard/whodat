@@ -1,0 +1,27 @@
+# build artifacts
+/build/
+/dist/
+/AppDir/
+/tmp/
+*.AppImage
+*.deb
+*.rpm
+*.pkg.tar.*
+
+# Debian source packages fetched for reference (apt-get source ...)
+/*.dsc
+/*.orig.tar.*
+/*.debian.tar.*
+/qt6-base-*/
+
+# local sysroots used for builds without root-installed -dev packages
+/.sysroot/
+/.sysroot-qt/
+
+# editor history
+/.history/
+
+# go
+*.test
+*.out
+tg-creds

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>io.github.frontyard.whodat</id>
+  <name>WhoDat</name>
+  <summary>Unofficial WhatsApp messaging app for Linux</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>GPL-3.0-or-later</project_license>
+  <description>
+    <p>
+      WhoDat is an unofficial WhatsApp messaging app for Linux,
+      built on the whatsmeow library. Qt6/QML interface with chats,
+      media, voice messages, polls, calls, and desktop notifications.
+    </p>
+  </description>
+  <launchable type="desktop-id">io.github.frontyard.whodat.desktop</launchable>
+  <url type="homepage">https://github.com/frontyard/whodat</url>
+  <categories>
+    <category>Network</category>
+    <category>InstantMessaging</category>
+  </categories>
+  <provides>
+    <binary>whodat</binary>
+  </provides>
+  <content_rating type="oars-1.1"/>
+</component>

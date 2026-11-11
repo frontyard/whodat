@@ -1,0 +1,224 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g. v0.1.0); "dev" = build artifacts only'
+        required: false
+        default: 'dev'
+
+env:
+  GO_VERSION: '1.26'
+  DEBIAN_FRONTEND: noninteractive
+
+jobs:
+  build:
+    name: binary + packages
+    # Releases only: tag pushes and manual dispatch. Branch pushes and PRs
+    # just run check, which keeps the Go build cache warm for releases.
+    if: github.event_name == 'workflow_dispatch' || github.ref_type == 'tag'
+    permissions:
+      contents: write # release step creates tags/releases via GITHUB_TOKEN
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      # git must exist before checkout: without it, actions/checkout falls
+      # back to a REST tarball with no .git, breaking the tag step below.
+      - name: install toolchain + dev deps
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends \
+            ca-certificates curl git xz-utils file \
+            pkg-config gcc g++ make libc6-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good \
+            qt6-base-dev qt6-declarative-dev qt6-declarative-dev-tools \
+            qt6-multimedia-dev \
+            libqt6svg6 qt6-qpa-plugins qt6-wayland \
+            qt6ct adwaita-qt6 \
+            qml6-module-qtqml qml6-module-qtquick \
+            qml6-module-qtquick-controls qml6-module-qtquick-templates \
+            qml6-module-qtquick-layouts qml6-module-qtquick-dialogs \
+            qml6-module-qtquick-effects qml6-module-qtmultimedia \
+            librsvg2-bin
+          # Go itself comes from setup-go below; Debian's golang is too old
+          # for go.mod anyway.
+
+      - uses: actions/checkout@v4
+
+      # Steps in this container run as root while the workspace stays owned
+      # by the host runner uid — git refuses the repo ("not in a git
+      # directory") until it's marked safe. checkout only sets this in a
+      # temporary HOME, so do it here for the run steps that follow.
+      - name: mark workspace safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+      - name: install nfpm
+        run: |
+          # nfpm deb assets are versioned (nfpm_X.Y.Z_amd64.deb); resolve the latest tag first.
+          tag=$(curl -fsSI -o /dev/null -w '%{redirect_url}' https://github.com/goreleaser/nfpm/releases/latest | sed 's|.*/||')
+          curl -fsSL "https://github.com/goreleaser/nfpm/releases/download/${tag}/nfpm_${tag#v}_amd64.deb" -o /tmp/nfpm.deb
+          dpkg -i /tmp/nfpm.deb || apt-get install -f -y
+          nfpm --version
+
+      - name: install appimagetool
+        run: |
+          curl -fsSL https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage -o /usr/local/bin/appimagetool
+          chmod +x /usr/local/bin/appimagetool
+          # appimagetool is itself an AppImage; extract if FUSE is absent.
+          # Rename squashfs-root — the linuxdeploy step below extracts into
+          # the same /opt/squashfs-root and moves it away.
+          /usr/local/bin/appimagetool --version || {
+            cd /opt && /usr/local/bin/appimagetool --appimage-extract >/dev/null
+            mv squashfs-root appimagetool.dir
+            ln -sf /opt/appimagetool.dir/AppRun /usr/local/bin/appimagetool
+          }
+
+      - name: install linuxdeploy + qt plugin
+        run: |
+          # Bundles the Qt6 runtime + QML modules into the AppDir so the
+          # AppImage is self-contained. Also AppImages; extract for no-FUSE.
+          cd /opt
+          curl -fsSL -o linuxdeploy \
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          curl -fsSL -o linuxdeploy-plugin-qt \
+            https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy linuxdeploy-plugin-qt
+          ./linuxdeploy --appimage-extract >/dev/null && mv squashfs-root linuxdeploy.dir
+          ./linuxdeploy-plugin-qt --appimage-extract >/dev/null && mv squashfs-root linuxdeploy-plugin-qt.dir
+          ln -sf /opt/linuxdeploy.dir/AppRun /usr/local/bin/linuxdeploy
+          ln -sf /opt/linuxdeploy-plugin-qt.dir/AppRun /usr/local/bin/linuxdeploy-plugin-qt
+          linuxdeploy --version
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: lint + vet + test
+        run: |
+          make lint
+          go test ./...
+
+      - name: resolve version
+        id: ver
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            V="${{ inputs.version }}"
+          else
+            V="${{ github.ref_name }}"
+          fi
+          V="${V#refs/tags/}"
+          if [ "$V" = "dev" ]; then
+            echo "tag=dev" >> "$GITHUB_OUTPUT"
+            echo "num=dev" >> "$GITHUB_OUTPUT"
+          else
+            echo "${V#v}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "invalid version: $V" >&2; exit 1; }
+            echo "tag=v${V#v}" >> "$GITHUB_OUTPUT"
+            echo "num=${V#v}" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: changelog + tag
+        if: github.event_name == 'workflow_dispatch' && inputs.version != 'dev'
+        run: |
+          V="${{ steps.ver.outputs.num }}"
+          TAG="${{ steps.ver.outputs.tag }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Rename [Unreleased] to the release version and open a fresh
+          # [Unreleased] on top for the next cycle. Idempotent: re-runs for
+          # the same version find the section already in place.
+          if ! grep -qF "## [$V]" CHANGELOG.md; then
+            awk -v v="$V" -v d="$(date +%F)" '
+              /^## \[Unreleased\]/ && !done {
+                print "## [Unreleased]"
+                print ""
+                print "## [" v "] - " d
+                done = 1
+                next
+              }
+              { print }
+            ' CHANGELOG.md > CHANGELOG.new
+            mv CHANGELOG.new CHANGELOG.md
+            git add CHANGELOG.md
+            git commit -m "Release $TAG"
+            git push origin "HEAD:refs/heads/${{ github.ref_name }}"
+          fi
+
+          # Tag HEAD (the changelog commit when there is one) and push. The
+          # GITHUB_TOKEN push does not retrigger this workflow.
+          if ! git ls-remote --tags origin "refs/tags/$TAG" | grep -q .; then
+            git tag -a "$TAG" -m "Release $TAG"
+            git push origin "$TAG"
+          fi
+
+      - name: build
+        run: make VERSION="${{ steps.ver.outputs.tag }}"
+
+      - name: package deb + rpm
+        run: make pkg VERSION="${{ steps.ver.outputs.num }}"
+
+      - name: package appimage
+        run: make appimage VERSION="${{ steps.ver.outputs.tag }}"
+
+      - name: upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: whodat-${{ steps.ver.outputs.tag }}
+          path: |
+            build/whodat
+            dist/*.deb
+            dist/*.rpm
+            dist/*.pkg.tar.zst
+            dist/*.AppImage
+          if-no-files-found: warn
+
+      - name: changelog notes
+        if: github.event_name == 'push' || inputs.version != 'dev'
+        run: |
+          awk -v v="${{ steps.ver.outputs.num }}" '
+            $0 ~ "^## \\[?" v { in_sec=1; next }
+            /^## / { in_sec=0 }
+            in_sec { print }
+          ' CHANGELOG.md > release-notes.md || true
+          [ -s release-notes.md ] || echo "See generated release notes below." > release-notes.md
+          cat release-notes.md
+
+      - name: release
+        if: github.event_name == 'push' || inputs.version != 'dev'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.ver.outputs.tag }}
+          body_path: release-notes.md
+          files: |
+            build/whodat
+            dist/*.deb
+            dist/*.rpm
+            dist/*.pkg.tar.zst
+            dist/*.AppImage
+          generate_release_notes: true
+
+  check:
+    name: vet + test
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - name: install toolchain
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends ca-certificates curl git pkg-config gcc g++ libc6-dev \
+            qt6-base-dev qt6-declarative-dev qt6-multimedia-dev \
+            libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base gstreamer1.0-plugins-good
+          curl -fsSL https://go.dev/dl/go1.26.0.linux-amd64.tar.gz | tar -C /usr/local -xz
+          ln -sf /usr/local/go/bin/go /usr/local/bin/go
+      - uses: actions/checkout@v4
+      - name: mark workspace safe for git
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+      - name: vet + test
+        run: go vet ./... && go test ./...

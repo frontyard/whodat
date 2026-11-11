@@ -1,0 +1,112 @@
+# nfpm config — builds .deb, .rpm and Arch .pkg.tar.zst
+name: whodat
+arch: amd64
+platform: linux
+version: ${VERSION}
+section: net
+priority: optional
+maintainer: whodat contributors
+description: |
+  WhoDat is an unofficial WhatsApp messaging app for Linux.
+  Qt6/QML UI, whatsmeow protocol, audio/video calls.
+homepage: https://github.com/frontyard/whodat
+license: GPL-3.0-or-later
+
+deb:
+  fields:
+    Installed-Size: 49000
+
+rpm:
+  group: Applications/Internet
+
+archlinux:
+  packager: whodat contributors
+
+# nfpm v2: per-packager depends/recommends live under overrides, not deb:/rpm:.
+overrides:
+  deb:
+    depends:
+      - libqt6core6t64
+      - libqt6gui6
+      - libqt6qml6
+      - libqt6quick6
+      - libqt6quickcontrols2-6
+      - libqt6quicktemplates2-6
+      - libqt6widgets6
+      - libqt6multimedia6
+      - libqt6multimediawidgets6
+      - libqt6svg6
+      - libqt6waylandclient6
+      - qml6-module-qtqml
+      - qml6-module-qtquick
+      - qml6-module-qtquick-controls
+      - qml6-module-qtquick-templates
+      - qml6-module-qtquick-layouts
+      - qml6-module-qtquick-dialogs
+      - qml6-module-qtquick-effects
+      - qml6-module-qtmultimedia
+      - libgstreamer1.0-0
+      - libgstreamer-plugins-base1.0-0
+    recommends:
+      - qt6-wayland
+      - qt6ct
+      - adwaita-qt6
+      - qt6-gtk-platformtheme
+      - gstreamer1.0-plugins-good
+      - gstreamer1.0-plugins-bad
+      - gstreamer1.0-plugins-ugly
+      - gstreamer1.0-libav
+      - gstreamer1.0-pipewire
+  rpm:
+    depends:
+      - qt6-qtbase
+      - qt6-qtbase-gui
+      - qt6-qtdeclarative
+      - qt6-qtmultimedia
+      - qt6-qtsvg
+      - gstreamer1
+      - gstreamer1-plugins-base
+    recommends:
+      - qt6-qtwayland
+      - qt6ct
+      - adwaita-qt6
+      - gstreamer1-plugins-good
+      - gstreamer1-plugins-bad-free
+      - gstreamer1-plugins-ugly-free
+      - gstreamer1-libav
+      - pipewire-gstreamer
+  archlinux:
+    depends:
+      - qt6-base
+      - qt6-declarative
+      - qt6-multimedia
+      - qt6-svg
+      - gstreamer
+      - gst-plugins-base-libs
+    # nfpm maps recommends+suggests to pacman optdepends for archlinux.
+    recommends:
+      - qt6-wayland
+      - qt6ct
+      - adwaita-qt6
+      - gst-plugins-good
+      - gst-plugins-bad
+      - gst-plugins-ugly
+      - gst-libav
+      - gst-plugin-pipewire
+
+contents:
+  - src: ./build/whodat
+    dst: /usr/bin/whodat
+    file_info:
+      mode: 0755
+  - src: ./data/io.github.frontyard.whodat.desktop
+    dst: /usr/share/applications/io.github.frontyard.whodat.desktop
+  - src: ./internal/core/icon.svg
+    dst: /usr/share/icons/hicolor/scalable/apps/io.github.frontyard.whodat.svg
+  - src: ./data/io.github.frontyard.whodat.metainfo.xml
+    dst: /usr/share/metainfo/io.github.frontyard.whodat.metainfo.xml
+  - src: ./NOTICE
+    dst: /usr/share/doc/whodat/NOTICE
+
+scripts:
+  postinstall: ./packaging/postinstall.sh
