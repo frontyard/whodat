@@ -12,6 +12,8 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-11-11
+
 Initial release.
 
 ### Added
