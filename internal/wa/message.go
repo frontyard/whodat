@@ -139,13 +139,16 @@ func (s *Service) applyAction(ctx context.Context, chatJID appstore.PeerID, m *a
 	case actRevoke:
 		// Capture the media path first — SetRevoked clears it from the row,
 		// then unlink the file so deleted media can't be reopened from disk.
-		var oldPath string
+		var oldPath, oldThumb string
 		if target, err := s.db.GetMessage(ctx, chatJID, act.targetID); err == nil && target != nil {
-			oldPath = target.MediaPath
+			oldPath, oldThumb = target.MediaPath, target.MediaThumb
 		}
 		if err := s.db.SetRevoked(ctx, chatJID, act.targetID); err == nil {
 			if oldPath != "" {
 				_ = os.Remove(oldPath)
+			}
+			if oldThumb != "" {
+				_ = os.Remove(oldThumb)
 			}
 			s.publishMsgUpdate(ctx, chatJID, act.targetID)
 		}

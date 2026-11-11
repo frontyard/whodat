@@ -215,6 +215,38 @@ func TestConvertLinkPreview(t *testing.T) {
 	}
 }
 
+func TestConvertVideoThumb(t *testing.T) {
+	t.Setenv("XDG_DATA_HOME", t.TempDir()) // thumb staging stays in the sandbox
+	wm := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
+		Mimetype:      proto.String("video/mp4"),
+		GifPlayback:   proto.Bool(true),
+		Width:         proto.Uint32(480),
+		Height:        proto.Uint32(360),
+		JPEGThumbnail: []byte{0xFF, 0xD8, 0xFF, 0x03},
+	}}
+	m, act := tsvc.convert("c@s.whatsapp.net", "v1", "s", "", false, time.Now(), wm)
+	if act.kind != actInsert || m.Type != store.TVideo {
+		t.Fatalf("video convert: %+v", m)
+	}
+	if m.MediaThumb == "" {
+		t.Fatal("inline video thumbnail not staged")
+	}
+	data, err := os.ReadFile(m.MediaThumb)
+	if err != nil || len(data) != 4 {
+		t.Fatalf("thumb file: %v %d", err, len(data))
+	}
+}
+
+func TestConvertVideoNoThumb(t *testing.T) {
+	wm := &waE2E.Message{VideoMessage: &waE2E.VideoMessage{
+		Mimetype: proto.String("video/mp4"),
+	}}
+	m, _ := tsvc.convert("c", "v2", "s", "", false, time.Now(), wm)
+	if m.MediaThumb != "" {
+		t.Fatalf("phantom thumb: %q", m.MediaThumb)
+	}
+}
+
 func TestConvertLinkPreviewRequiresURL(t *testing.T) {
 	// A bare ExtendedTextMessage (quote/mention carries no card).
 	wm := &waE2E.Message{ExtendedTextMessage: &waE2E.ExtendedTextMessage{

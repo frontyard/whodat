@@ -53,7 +53,8 @@ Dialog {
                 spacing: 8
 
                 WdRoundButton {
-                    text: player.playbackState === MediaPlayer.PlayingState ? "⏸" : "▶"
+                    icon.source: Qt.resolvedUrl(player.playbackState === MediaPlayer.PlayingState ? "icons/pause.svg" : "icons/play_arrow.svg")
+                    icon.color: "white"
                     onClicked: player.playbackState === MediaPlayer.PlayingState ? player.pause() : player.play()
                 }
                 Slider {
@@ -70,7 +71,7 @@ Dialog {
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl("icons/close.svg")
-                icon.color: "white"
+                    icon.color: "white"
                     onClicked: dlg.close()
                 }
             }

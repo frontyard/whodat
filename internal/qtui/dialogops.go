@@ -271,6 +271,7 @@ func (h *Host) opChatInfo(_ *Host, args json.RawMessage) (any, error) {
 		"phone":        h.app.NumberOf(ctx, c.JID),
 		"avatarPath":   c.AvatarPath,
 		"isGroup":      c.Kind == store.KindGroup,
+		"left":         c.Left,
 		"disappSecs":   c.DisappSecs,
 		"disappText":   core.DisappText(c.DisappSecs),
 		"starredCount": len(starred),

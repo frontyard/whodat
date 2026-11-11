@@ -103,6 +103,10 @@ type GroupParticipant struct {
 	Display string       // protocol-provided display name (anonymous participants)
 	IsAdmin bool
 	IsMe    bool
+	// WireID is the participant id in the group's addressing mode — the
+	// form wire payloads (e.g. mention JIDs) must carry. Empty means the
+	// service has no distinct wire form; callers fall back to ID.
+	WireID store.PeerID
 }
 
 // GroupInfo is normalized group metadata.

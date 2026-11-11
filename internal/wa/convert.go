@@ -313,6 +313,13 @@ func (s *Service) convert(chatJID store.PeerID, id string, senderJID store.PeerI
 		out.Width = int(vm.GetWidth())
 		out.Height = int(vm.GetHeight())
 		out.Duration = int(vm.GetSeconds())
+		// Sender-rendered first frame — the bubble's poster until the
+		// video downloads (GIFs are gifPlayback videos and carry it too).
+		if b := vm.GetJPEGThumbnail(); len(b) > 0 {
+			if p, err := media.StageBytes(s.acct, b, ".jpg"); err == nil {
+				out.MediaThumb = p
+			}
+		}
 	case store.TAudio, store.TPTT:
 		am := wm.GetAudioMessage()
 		out.MediaMIME = am.GetMimetype()

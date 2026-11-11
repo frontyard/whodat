@@ -87,7 +87,7 @@ Dialog {
                         }
                     }
                     WdRoundButton {
-                        visible: dlg.info.isGroup === true && dlg.weAdmin
+                        visible: dlg.info.isGroup === true && dlg.weAdmin && !dlg.info.left
                         icon.source: Qt.resolvedUrl("icons/edit.svg")
                         icon.color: Theme.onSurfaceVariant
                         flat: true
@@ -126,7 +126,7 @@ Dialog {
                 onClicked: dlg.openVerify(dlg.jid)
             }
             WdItemDelegate {
-                visible: dlg.info.isGroup === true
+                visible: dlg.info.isGroup === true && !dlg.info.left
                 Layout.fillWidth: true
                 text: "Copy invite link"
                 onClicked: Bridge.cmd("groupInvite", {jid: dlg.jid}, function(ok, data, err) {
@@ -203,11 +203,20 @@ Dialog {
                 }
             }
             WdItemDelegate {
-                visible: dlg.info.isGroup === true
+                visible: dlg.info.isGroup === true && !dlg.info.left
                 Layout.fillWidth: true
                 contentItem: Label { text: "Leave group"; color: Theme.error }
                 onClicked: {
                     Bridge.cmd("chatAction", {jid: dlg.jid, id: "leave"});
+                    dlg.close();
+                }
+            }
+            WdItemDelegate {
+                visible: dlg.info.isGroup === true && dlg.info.left === true
+                Layout.fillWidth: true
+                contentItem: Label { text: "Delete chat"; color: Theme.error }
+                onClicked: {
+                    Bridge.cmd("chatAction", {jid: dlg.jid, id: "delete"});
                     dlg.close();
                 }
             }

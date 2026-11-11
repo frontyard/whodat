@@ -235,6 +235,20 @@ Item {
         Composer {
             id: composer
             Layout.fillWidth: true
+            visible: App.chatLeft !== true
+        }
+        // left/deleted group — the composer swaps for a notice strip.
+        Rectangle {
+            Layout.fillWidth: true
+            implicitHeight: 52
+            visible: App.chatLeft === true
+            color: Theme.surfaceContainer
+            Label {
+                anchors.centerIn: parent
+                text: "You can't send messages to this group"
+                color: Theme.onSurfaceVariant
+                font.pixelSize: 13
+            }
         }
     }
 

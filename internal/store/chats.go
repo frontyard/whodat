@@ -30,7 +30,8 @@ type Chat struct {
 	Pinned         bool
 	Archived       bool
 	Muted          bool
-	DisappSecs     int // disappearing-message timer (0 = off)
+	DisappSecs     int  // disappearing-message timer (0 = off)
+	Left           bool // group we've left/been removed from (or that was deleted)
 }
 
 // Contact is an address-book / push-name record.
@@ -69,9 +70,9 @@ func scanChat(row interface{ Scan(...any) error }) (*Chat, error) {
 	var c Chat
 	var kind string
 	var ts int64
-	var pinned, archived, muted, disapp int
+	var pinned, archived, muted, disapp, leftg int
 	err := row.Scan(&c.RowID, &c.JID, &kind, &c.Name, &c.AvatarPath, &ts,
-		&c.LastMsgPreview, &c.Unread, &pinned, &archived, &muted, &disapp)
+		&c.LastMsgPreview, &c.Unread, &pinned, &archived, &muted, &disapp, &leftg)
 	if err != nil {
 		return nil, err
 	}
@@ -79,17 +80,18 @@ func scanChat(row interface{ Scan(...any) error }) (*Chat, error) {
 	c.LastMsgTS = time.Unix(ts, 0)
 	c.Pinned, c.Archived, c.Muted = pinned != 0, archived != 0, muted != 0
 	c.DisappSecs = disapp
+	c.Left = leftg != 0
 	return &c, nil
 }
 
-const chatCols = `jid,kind,name,avatar_path,last_msg_ts,last_msg_preview,unread,pinned,archived,muted,disapp_secs`
+const chatCols = `jid,kind,name,avatar_path,last_msg_ts,last_msg_preview,unread,pinned,archived,muted,disapp_secs,left_group`
 
 // chatColsJoined resolves the display name: contact names win (address-book
 // names and push names beat stale number fallbacks); chats.name is the
 // fallback for groups and non-contacts.
 const chatColsJoined = `c.rowid,c.jid,c.kind,
 COALESCE(NULLIF(ct.full_name,''),NULLIF(ct.push_name,''),NULLIF(ct.business_name,''),NULLIF(c.name,''),''),
-c.avatar_path,c.last_msg_ts,c.last_msg_preview,c.unread,c.pinned,c.archived,c.muted,c.disapp_secs`
+c.avatar_path,c.last_msg_ts,c.last_msg_preview,c.unread,c.pinned,c.archived,c.muted,c.disapp_secs,c.left_group`
 
 const chatsJoined = ` FROM chats c LEFT JOIN contacts ct ON ct.jid=c.jid`
 
@@ -211,6 +213,15 @@ func (d *DB) SetChatFlags(ctx context.Context, jid PeerID, pinned, archived, mut
 		}
 	}
 	return nil
+}
+
+// SetChatLeft records whether we're still a participant of a group —
+// left, removed, or the group deleted (on the chat and its pair).
+func (d *DB) SetChatLeft(ctx context.Context, jid PeerID, left bool) error {
+	clause, args := d.colIN(ctx, "jid", jid)
+	_, err := d.sql.ExecContext(ctx, `UPDATE chats SET left_group=? WHERE `+clause,
+		append([]any{left}, args...)...)
+	return err
 }
 
 // SetChatAvatar updates the cached avatar path (on the chat and its pair).
@@ -397,6 +408,7 @@ func (d *DB) mergeByCanonical(ctx context.Context, in []*Chat) []*Chat {
 		m.Pinned = m.Pinned || c.Pinned
 		m.Archived = m.Archived && c.Archived
 		m.Muted = m.Muted && c.Muted
+		m.Left = m.Left || c.Left
 		if !strings.HasSuffix(string(c.JID), "@lid") && strings.HasSuffix(string(m.JID), "@lid") {
 			m.JID = c.JID
 		}

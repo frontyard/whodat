@@ -133,6 +133,7 @@ func (s *Service) applyMentions(ctx context.Context, text string, mentions []pro
 	// matches inside it. Rewritten spans can't re-match later tokens.
 	ms := append([]protocol.Mention(nil), mentions...)
 	sort.SliceStable(ms, func(i, j int) bool { return len(ms[i].Token) > len(ms[j].Token) })
+	orig := text
 	for _, m := range ms {
 		tj, err := s.jid(m.ID)
 		if err != nil || tj.User == "" {
@@ -146,18 +147,24 @@ func (s *Service) applyMentions(ctx context.Context, text string, mentions []pro
 		add(tj)
 		add(s.altJID(ctx, tj))
 	}
-	// Hand-typed "@digits" (incl. spans just written): a PN always exists
-	// syntactically; the LID form joins only when the LID map knows it —
-	// otherwise a PN's own digits could name a stranger's LID.
-	for _, dm := range waMentionRe.FindAllStringSubmatch(text, -1) {
+	// Hand-typed "@digits" — scanned on the ORIGINAL text, not the
+	// rewritten one: a picked "@name" rewritten to "@<lid digits>" would
+	// otherwise mint "<lid digits>@s.whatsapp.net", a phantom PN that
+	// claims the same span as the real LID and renders "@Unknown" on
+	// receiving clients. Typed digits that name a known LID keep the LID
+	// form for the same reason; anything else is assumed to be a PN.
+	for _, dm := range waMentionRe.FindAllStringSubmatch(orig, -1) {
 		d := dm[1]
-		add(types.NewJID(d, types.DefaultUserServer))
 		lid := types.NewJID(d, types.HiddenUserServer)
 		if c := s.Client(); c != nil && c.Store != nil && c.Store.LIDs != nil {
 			if _, err := c.Store.LIDs.GetPNForLID(ctx, lid); err == nil {
 				add(lid)
+				continue
 			}
 		}
+		pn := types.NewJID(d, types.DefaultUserServer)
+		add(pn)
+		add(s.altJID(ctx, pn))
 	}
 	return text, jids
 }
@@ -255,6 +262,9 @@ func (s *Service) SendRevoke(ctx context.Context, chatJID appstore.PeerID, targe
 	if err := s.db.SetRevoked(ctx, chatJID, target.ID); err == nil {
 		if target.MediaPath != "" {
 			_ = os.Remove(target.MediaPath)
+		}
+		if target.MediaThumb != "" {
+			_ = os.Remove(target.MediaThumb)
 		}
 		s.publishMsgUpdate(ctx, chatJID, target.ID)
 	}
@@ -542,6 +552,8 @@ func (s *Service) GetProfilePictureURL(ctx context.Context, jidStr appstore.Peer
 
 // GetGroupInfo fetches group metadata in normalized form — the participant
 // id prefers the real number over the LID (group ops address the PN).
+// WireID always carries the group's addressing-mode jid (mentions must
+// use that form or receiving clients can't match them to the roster).
 func (s *Service) GetGroupInfo(ctx context.Context, jidStr appstore.PeerID) (*protocol.GroupInfo, error) {
 	jid, err := s.jid(jidStr)
 	if err != nil {
@@ -567,6 +579,7 @@ func (s *Service) GetGroupInfo(ctx context.Context, jidStr appstore.PeerID) (*pr
 			Display: p.DisplayName,
 			IsAdmin: p.IsAdmin || p.IsSuperAdmin,
 			IsMe:    id.User == ownUser && ownUser != "",
+			WireID:  s.cid(p.JID.String()),
 		})
 	}
 	return out, nil
@@ -632,10 +645,11 @@ func (s *Service) setChatName(ctx context.Context, chatJID appstore.PeerID, kind
 
 // altJID maps a JID between its PN and LID forms via the session LID map.
 func (s *Service) altJID(ctx context.Context, jid types.JID) types.JID {
-	if s.Client().Store == nil || s.Client().Store.LIDs == nil {
+	c := s.Client()
+	if c == nil || c.Store == nil || c.Store.LIDs == nil {
 		return types.JID{}
 	}
-	lids := s.Client().Store.LIDs
+	lids := c.Store.LIDs
 	if jid.Server == types.HiddenUserServer {
 		if alt, err := lids.GetPNForLID(ctx, jid); err == nil {
 			return alt

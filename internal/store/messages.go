@@ -82,6 +82,7 @@ type Message struct {
 	MediaPath     string
 	MediaMIME     string
 	MediaName     string // original filename (documents)
+	MediaThumb    string // sender-provided inline thumbnail (video poster / GIF first frame)
 	MediaSize     int64
 	Duration      int // seconds, audio/video
 	Width         int
@@ -131,7 +132,7 @@ type pollJSON struct {
 const msgCols = `chat_jid,id,sender_jid,sender_name,ts,type,text,media_path,media_mime,
 media_name,media_size,duration,width,height,quoted_id,quoted_sender,quoted_text,
 from_me,status,edited,revoked,starred,view_once,expires_at,poll_options,reactions,waveform,proto,html,forwarded,forwarded_from,
-link_preview,preview_url`
+link_preview,preview_url,media_thumb`
 
 // msgSelCols prefixes rowid for SELECTs (scanMessage reads it first).
 const msgSelCols = `rowid,` + msgCols
@@ -147,7 +148,7 @@ func scanMessage(row interface{ Scan(...any) error }) (*Message, error) {
 		&m.MediaPath, &m.MediaMIME, &m.MediaName, &m.MediaSize, &m.Duration, &m.Width, &m.Height,
 		&m.QuotedID, &m.QuotedSender, &m.QuotedText, &fromMe, &status, &edited, &revoked,
 		&starred, &viewOnce, &expiresAt, &pollOpts, &reactions, &m.Waveform, &m.Proto, &m.HTML, &forwarded,
-		&m.ForwardedFrom, &linkPrev, &prevURL)
+		&m.ForwardedFrom, &linkPrev, &prevURL, &m.MediaThumb)
 	if err != nil {
 		return nil, err
 	}
@@ -205,7 +206,7 @@ func msgVals(m *Message) []any {
 		m.MediaPath, m.MediaMIME, m.MediaName, m.MediaSize, m.Duration, m.Width, m.Height,
 		m.QuotedID, m.QuotedSender, m.QuotedText, m.FromMe, string(m.Status),
 		m.Edited, m.Revoked, m.Starred, m.ViewOnce, expires, string(pollOpts), string(reactions), m.Waveform, m.Proto, m.HTML, m.Forwarded, m.ForwardedFrom,
-		linkPrev, prevURL}
+		linkPrev, prevURL, m.MediaThumb}
 }
 
 // statusRank maps a status value to its monotonic progression rank. Used in
@@ -222,7 +223,7 @@ var keepStatusRank = fmt.Sprintf(`status=CASE WHEN %s >= %s THEN excluded.status
 // from drifting again.
 var insertSQL = `
 INSERT INTO messages (` + msgCols + `)
-VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 ON CONFLICT(chat_jid,id) DO UPDATE SET
   text=excluded.text, type=excluded.type, edited=excluded.edited,
   html=CASE WHEN excluded.html!='' THEN excluded.html ELSE messages.html END,
@@ -237,6 +238,7 @@ ON CONFLICT(chat_jid,id) DO UPDATE SET
   ` + keepStatusRank + `,
   reactions=CASE WHEN messages.reactions IN ('','null','{}') THEN excluded.reactions ELSE messages.reactions END,
   media_path=CASE WHEN excluded.media_path!='' THEN excluded.media_path ELSE messages.media_path END,
+  media_thumb=CASE WHEN excluded.media_thumb!='' THEN excluded.media_thumb ELSE messages.media_thumb END,
   proto=CASE WHEN excluded.proto IS NOT NULL THEN excluded.proto ELSE messages.proto END,
   forwarded=MAX(messages.forwarded, excluded.forwarded),
   forwarded_from=CASE WHEN excluded.forwarded_from!='' THEN excluded.forwarded_from ELSE messages.forwarded_from END,
@@ -400,7 +402,7 @@ func (d *DB) SetRevoked(ctx context.Context, chatJID PeerID, id string) error {
 	clause, args := d.msgWhere(ctx, chatJID, id)
 	_, err := d.sql.ExecContext(ctx, `
 UPDATE messages SET revoked=1, type=?, text='', media_path='', media_mime='',
-  media_name='', media_size=0, duration=0, width=0, height=0,
+  media_name='', media_size=0, duration=0, width=0, height=0, media_thumb='',
   waveform=NULL, proto=NULL, reactions='', html='', link_preview='', preview_url=''
 WHERE `+clause, append([]any{string(TRevoked)}, args...)...)
 	return err
@@ -428,6 +430,14 @@ func (d *DB) SetMediaPath(ctx context.Context, chatJID PeerID, id, path string) 
 	clause, args := d.msgWhere(ctx, chatJID, id)
 	_, err := d.sql.ExecContext(ctx,
 		`UPDATE messages SET media_path=? WHERE `+clause, append([]any{path}, args...)...)
+	return err
+}
+
+// SetMediaThumb stores the staged inline-thumbnail path.
+func (d *DB) SetMediaThumb(ctx context.Context, chatJID PeerID, id, path string) error {
+	clause, args := d.msgWhere(ctx, chatJID, id)
+	_, err := d.sql.ExecContext(ctx,
+		`UPDATE messages SET media_thumb=? WHERE `+clause, append([]any{path}, args...)...)
 	return err
 }
 
@@ -501,12 +511,14 @@ func (d *DB) MessagesByPreviewURL(ctx context.Context, acct, url string) ([]*Mes
 // mediaPathsIn returns media and preview-thumbnail paths of every message
 // matching the clause — callers unlink them after deletion.
 func (d *DB) mediaPathsIn(ctx context.Context, clause string, args []any) []string {
-	all := append(append([]any{}, args...), args...)
+	all := append(append(append([]any{}, args...), args...), args...)
 	rows, err := d.sql.QueryContext(ctx,
 		`SELECT media_path FROM messages WHERE media_path!='' AND `+clause+`
 UNION ALL
 SELECT CASE WHEN json_valid(link_preview) THEN json_extract(link_preview,'$.thumb') END
-FROM messages WHERE json_valid(link_preview) AND `+clause,
+FROM messages WHERE json_valid(link_preview) AND `+clause+`
+UNION ALL
+SELECT media_thumb FROM messages WHERE media_thumb!='' AND `+clause,
 		all...)
 	if err != nil {
 		return nil
@@ -710,7 +722,7 @@ func (d *DB) SetRevokedTx(ctx context.Context, tx *sql.Tx, alts []PeerID, id str
 	clause, args := msgWhereAlts(alts, id)
 	_, err := tx.ExecContext(ctx, `
 UPDATE messages SET revoked=1, type=?, text='', media_path='', media_mime='',
-  media_name='', media_size=0, duration=0, width=0, height=0,
+  media_name='', media_size=0, duration=0, width=0, height=0, media_thumb='',
   waveform=NULL, proto=NULL, reactions='', html='', link_preview='', preview_url=''
 WHERE `+clause, append([]any{string(TRevoked)}, args...)...)
 	return err

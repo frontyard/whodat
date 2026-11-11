@@ -509,13 +509,14 @@ func (s *Service) dispatch(evt any) {
 			s.sink.AvatarChanged(s.canon(ctx, s.cid(e.JID.String())), e.Remove)
 		}
 	case *events.GroupInfo:
+		jid := s.cid(e.JID.String())
 		if e.Name != nil && e.Name.Name != "" {
-			jid := s.cid(e.JID.String())
 			s.dbDo(func(ctx context.Context) {
 				_ = s.db.UpsertChat(ctx, &appstore.Chat{JID: jid, Kind: appstore.KindGroup, Name: e.Name.Name})
 				s.sink.ChatChanged(jid)
 			})
 		}
+		s.onGroupMembership(ctx, e, jid)
 	case *events.JoinedGroup:
 		jid := s.cid(e.JID.String())
 		s.dbDo(func(ctx context.Context) {
@@ -651,6 +652,60 @@ func (s *Service) dispatch(evt any) {
 	case *events.Blocklist:
 		s.dbDo(func(ctx context.Context) { s.applyBlocklist(ctx, e) })
 	}
+}
+
+// onGroupMembership mirrors our own join/leave/remove state from group
+// notifications — a leave issued on another device, an admin's remove, or
+// a re-add all land here. Flag + transcript row go through applyMembership
+// on the serial writer; the LeaveGroup op writes the same marker locally,
+// so the 30s dedup keeps a leave we just performed from doubling up.
+func (s *Service) onGroupMembership(ctx context.Context, e *events.GroupInfo, jid appstore.PeerID) {
+	self := s.selfSet(ctx)
+	// Sender tells apart voluntary ("You left"/"You joined") from acted-on
+	// ("removed"/"added") — only a present-and-other sender counts; a
+	// missing one defaults to the voluntary wording.
+	byOther := e.Sender != nil && !self[e.Sender.ToNonAD()]
+	for _, j := range e.Join {
+		if self[j.ToNonAD()] {
+			text := "You joined"
+			if byOther {
+				text = "You were added"
+			}
+			s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, false, text) })
+			return
+		}
+	}
+	for _, j := range e.Leave {
+		if self[j.ToNonAD()] {
+			text := "You left"
+			if byOther {
+				text = "You were removed"
+			}
+			s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, true, text) })
+			return
+		}
+	}
+	if e.Delete != nil {
+		s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, true, "This group was deleted") })
+	}
+}
+
+// selfSet returns this account's own JIDs (PN + LID) keyed for membership
+// tests — group participant lists can carry either form.
+func (s *Service) selfSet(ctx context.Context) map[types.JID]bool {
+	out := map[types.JID]bool{}
+	c := s.Client()
+	if c.Store == nil || c.Store.ID == nil {
+		return out
+	}
+	pn := c.Store.ID.ToNonAD()
+	out[pn] = true
+	if c.Store.LIDs != nil {
+		if lid, err := c.Store.LIDs.GetLIDForPN(ctx, pn); err == nil && !lid.IsEmpty() {
+			out[lid] = true
+		}
+	}
+	return out
 }
 
 // sweepExpired deletes overdue disappearing messages and their media files.

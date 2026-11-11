@@ -22,6 +22,13 @@ type PreviewThumber interface {
 	FetchPreviewThumb(ctx context.Context, m *store.Message) (string, error)
 }
 
+// MediaThumber resolves a message's sender-provided inline thumbnail —
+// the video poster / GIF first frame living inside the protocol-owned
+// Proto payload, staged locally on first view.
+type MediaThumber interface {
+	FetchMediaThumb(ctx context.Context, m *store.Message) (string, error)
+}
+
 // PeerResolver turns a directory handle (phone number, @username) into a
 // chat id the account can open.
 type PeerResolver interface {

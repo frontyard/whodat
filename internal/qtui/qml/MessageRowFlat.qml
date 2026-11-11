@@ -23,6 +23,7 @@ Item {
     required property bool edited
     required property bool revoked
     required property string mediaPath
+    required property string mediaThumb
     required property string mediaMIME
     required property string mediaName
     required property string mediaSize
@@ -343,6 +344,7 @@ Item {
                     msgId: root.msgId
                     msgType: root.msgType
                     mediaPath: root.mediaPath
+                    mediaThumb: root.mediaThumb
                     mediaMIME: root.mediaMIME
                     mediaName: root.mediaName
                     mediaSize: root.mediaSize

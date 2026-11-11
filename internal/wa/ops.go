@@ -297,13 +297,38 @@ func (s *Service) JoinGroupByLink(ctx context.Context, code string) (types.JID, 
 	return s.Client().JoinGroupWithLink(ctx, code)
 }
 
-// LeaveGroup leaves a group.
+// LeaveGroup leaves a group, then records it locally — the chat keeps its
+// history but is flagged left (composer off, Delete in the menu) and gets
+// a transcript marker.
 func (s *Service) LeaveGroup(ctx context.Context, jidStr appstore.PeerID) error {
 	jid, err := s.jid(jidStr)
 	if err != nil {
 		return err
 	}
-	return s.Client().LeaveGroup(ctx, jid)
+	if err := s.Client().LeaveGroup(ctx, jid); err != nil {
+		return err
+	}
+	s.applyMembership(ctx, jidStr, true, "You left")
+	return nil
+}
+
+// applyMembership flags the chat left/rejoined and drops a system row so
+// the transcript shows it. The RecentSystemText window dedupes the leave
+// op racing the server's own "remove" notification, and re-adds racing a
+// rejoin — nothing worse than a near-duplicate marker can result.
+func (s *Service) applyMembership(ctx context.Context, jidStr appstore.PeerID, left bool, text string) {
+	if err := s.db.SetChatLeft(ctx, jidStr, left); err != nil {
+		s.log.Warnf("set left flag: %v", err)
+	}
+	if s.db.RecentSystemText(ctx, jidStr, text, time.Now().Add(-30*time.Second)) {
+		s.sink.ChatChanged(jidStr)
+		return
+	}
+	m := &appstore.Message{
+		ChatJID: jidStr, ID: fmt.Sprintf("grp-%d", time.Now().UnixNano()),
+		TS: time.Now(), Type: appstore.TSystem, Text: text,
+	}
+	s.persistMessage(ctx, m, appstore.KindGroup, false)
 }
 
 // GroupInviteLink returns (or resets) the group's invite link.

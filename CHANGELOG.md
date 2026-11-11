@@ -12,6 +12,34 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+- Video and GIF bubbles show the sender-provided first frame as a
+  poster while the attachment downloads — the thumbnail ships inside
+  the message, and rows converted before this version extract it from
+  the stored proto on first view; media cards cap at 320px wide and
+  video cards size to the wire aspect ratio
+- Left, removed or deleted groups keep their transcript but go
+  read-only — "You can't send messages to this group" replaces the
+  composer, member actions swap for Delete chat, and system markers
+  record "You left" / "You were removed" / "You joined" / "You were
+  added" / "This group was deleted" (mirrored from other devices via
+  group notifications)
+
+### Fixed
+- Typing indicator no longer gets stuck on — the peer's "stopped
+  typing" stanza is unreliable, so the header label now expires 15s
+  after the last composing event and clears immediately when that
+  sender's message lands; in groups, a different member's
+  pause/message no longer hides the active typist
+- Mentions in LID-mode groups no longer mint a phantom phone-number
+  JID — picked members go on the wire in the group's addressing mode
+  and hand-typed "@digits" resolve through the LID map, so receiving
+  clients stopped rendering "@Unknown"
+- Revoking or deleting a message now also removes its staged
+  video-poster thumbnail instead of leaving it in the media dir
+- Video player transport buttons use real icons instead of text
+  glyphs
+
 ## [0.1.0] - 2026-11-11
 
 Initial release.

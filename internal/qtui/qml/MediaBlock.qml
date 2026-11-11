@@ -13,6 +13,7 @@ Item {
     property string msgId: ""
     property string msgType: ""
     property string mediaPath: ""
+    property string mediaThumb: ""
     property string mediaMIME: ""
     property string mediaName: ""
     property string mediaSize: ""
@@ -33,6 +34,7 @@ Item {
 
     property bool isMedia: ["image", "sticker", "video", "audio", "ptt", "document"].indexOf(msgType) >= 0
     property string localPath: mediaPath
+    property string thumbPath: mediaThumb
     property bool fetching: false
 
     function fetch() {
@@ -41,6 +43,13 @@ Item {
         Bridge.cmd("mediaUrl", {jid: App.chatJID, msgId: blk.msgId}, function(ok, d, e) {
             blk.fetching = false;
             if (ok && d.path) blk.localPath = d.path;
+        });
+    }
+
+    function fetchThumb() {
+        if (blk.thumbPath !== "") return;
+        Bridge.cmd("mediaThumb", {jid: App.chatJID, msgId: blk.msgId}, function(ok, d, e) {
+            if (ok && d.path) blk.thumbPath = d.path;
         });
     }
 
@@ -54,6 +63,9 @@ Item {
         if (blk.localPath === "" && blk.isMedia
             && (blk.mediaBytes === 0 || blk.mediaBytes <= App.autoDownloadMax))
             blk.fetch();
+        // older rows carry the poster inside their proto — extract on view
+        if (blk.msgType === "video" && blk.thumbPath === "" && !blk.viewOnce)
+            blk.fetchThumb();
     }
 
     ColumnLayout {
@@ -65,7 +77,10 @@ Item {
         Rectangle {
             visible: blk.msgType === "image" || blk.msgType === "sticker"
             Layout.fillWidth: true
-            implicitHeight: blk.msgType === "sticker" ? 140 : Math.min(320, blk.mediaH > 0 ? blk.mediaH * 260 / Math.max(1, blk.mediaW) : 200)
+            // Cap the card width — in the flat transcript the row stretches
+            // full-window, and a full-bleed media card looks wrong.
+            Layout.maximumWidth: 320
+            implicitHeight: blk.msgType === "sticker" ? 140 : Math.min(320, blk.mediaH > 0 ? blk.mediaH * width / Math.max(1, blk.mediaW) : 200)
             radius: 8
             color: Qt.rgba(0, 0, 0, 0.12)
             clip: true
@@ -120,9 +135,26 @@ Item {
         Rectangle {
             visible: blk.msgType === "video"
             Layout.fillWidth: true
-            implicitHeight: 160
+            Layout.maximumWidth: 320
+            // Aspect-correct height from the wire dims — GIFs are often
+            // square-ish and a fixed strip crops them badly.
+            implicitHeight: blk.mediaW > 0 && blk.mediaH > 0
+                ? Math.min(400, Math.max(120, width * blk.mediaH / blk.mediaW))
+                : 160
             radius: 8
             color: Qt.rgba(0, 0, 0, 0.25)
+            clip: true
+
+            Image {
+                anchors.fill: parent
+                // sender-provided first frame (GIFs are videos on the wire)
+                source: blk.thumbPath !== "" && !blk.viewOnce
+                        ? Bridge.fileUrl(blk.thumbPath) : ""
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                cache: false
+                visible: status === Image.Ready
+            }
 
             WdIcon {
                 anchors.centerIn: parent

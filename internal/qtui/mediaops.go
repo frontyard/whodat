@@ -13,12 +13,14 @@ import (
 
 	"github.com/frontyard/whodat/internal/core"
 	"github.com/frontyard/whodat/internal/media"
+	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
 
 // registerMediaOps adds attachment ops (download/open/save/send/record).
 func (h *Host) registerMediaOps() {
 	h.ops["mediaUrl"] = h.opMediaURL
+	h.ops["mediaThumb"] = h.opMediaThumb
 	h.ops["openMedia"] = h.opOpenMedia
 	h.ops["saveMedia"] = h.opSaveMedia
 	h.ops["sendFile"] = h.opSendFile
@@ -56,6 +58,33 @@ func (h *Host) opMediaURL(_ *Host, args json.RawMessage) (any, error) {
 		return nil, err
 	}
 	return map[string]any{"path": p}, nil
+}
+
+// opMediaThumb resolves the sender-provided inline thumbnail (video
+// poster / GIF first frame) without downloading the attachment — the
+// bytes ship inside the stored proto and are staged on first view.
+// args: {jid, msgId} → {path} ("" when the message carries none)
+func (h *Host) opMediaThumb(_ *Host, args json.RawMessage) (any, error) {
+	var a struct {
+		JID   store.PeerID `json:"jid"`
+		MsgID string       `json:"msgId"`
+	}
+	if err := json.Unmarshal(args, &a); err != nil {
+		return nil, err
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+	m, err := h.app.DB.GetMessage(ctx, a.JID, a.MsgID)
+	if err != nil || m == nil {
+		return nil, err
+	}
+	path := ""
+	if svc, ok := h.app.SvcFor(a.JID).(protocol.MediaThumber); ok {
+		if p, err := svc.FetchMediaThumb(ctx, m); err == nil {
+			path = p
+		}
+	}
+	return map[string]any{"path": path}, nil
 }
 
 // opOpenMedia opens the attachment with the desktop default handler.

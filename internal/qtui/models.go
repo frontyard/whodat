@@ -62,6 +62,7 @@ const (
 	roleForwarded    = int(qt.UserRole) + 48
 	roleFwdFrom      = int(qt.UserRole) + 49
 	roleLinkPreview  = int(qt.UserRole) + 50
+	roleMediaThumb   = int(qt.UserRole) + 51
 )
 
 var chatRoleNames = map[int][]byte{
@@ -109,6 +110,7 @@ var msgRoleNames = map[int][]byte{
 	roleForwarded:    []byte("forwarded"),
 	roleFwdFrom:      []byte("fwdFrom"),
 	roleLinkPreview:  []byte("linkPreview"),
+	roleMediaThumb:   []byte("mediaThumb"),
 }
 
 func qvStr(s string) *qt.QVariant { return qt.NewQVariant14(s) }
@@ -441,6 +443,8 @@ func NewMessageListModel(h *Host) *MessageListModel {
 			return qvStr(msg.ForwardedFrom)
 		case roleLinkPreview:
 			return qvStr(linkPreviewJSON(msg))
+		case roleMediaThumb:
+			return qvStr(msg.MediaThumb)
 		}
 		return qvEmpty()
 	})

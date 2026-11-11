@@ -51,6 +51,44 @@ func (s *Service) FetchMedia(ctx context.Context, m *appstore.Message) (string, 
 	return path, nil
 }
 
+// FetchMediaThumb resolves the sender-provided inline thumbnail (the
+// video poster / GIF first frame) to a local file — the bytes ship inside
+// the message itself, so no download is needed. Rows converted before
+// thumb staging still carry them in the stored proto: extract on first view.
+func (s *Service) FetchMediaThumb(ctx context.Context, m *appstore.Message) (string, error) {
+	if m.MediaThumb != "" {
+		if _, err := os.Stat(m.MediaThumb); err == nil {
+			return m.MediaThumb, nil
+		}
+	}
+	if len(m.Proto) == 0 {
+		return "", fmt.Errorf("no proto payload for thumbnail")
+	}
+	wm := unmarshalProto(m.Proto)
+	if wm == nil {
+		return "", fmt.Errorf("message carries no proto")
+	}
+	var thumb []byte
+	switch {
+	case wm.GetVideoMessage() != nil:
+		thumb = wm.GetVideoMessage().GetJPEGThumbnail()
+	case wm.GetImageMessage() != nil:
+		thumb = wm.GetImageMessage().GetJPEGThumbnail()
+	case wm.GetDocumentMessage() != nil:
+		thumb = wm.GetDocumentMessage().GetJPEGThumbnail()
+	}
+	if len(thumb) == 0 {
+		return "", fmt.Errorf("message carries no inline thumbnail")
+	}
+	path, err := media.StageBytes(m.ChatJID.Acct(), thumb, ".jpg")
+	if err != nil {
+		return "", err
+	}
+	_ = s.db.SetMediaThumb(ctx, m.ChatJID, m.ID, path)
+	m.MediaThumb = path
+	return path, nil
+}
+
 // CanFetchMedia reports whether the row carries everything a fetch needs —
 // the proto payload holds the upload keys, so without it nothing resolves.
 func (s *Service) CanFetchMedia(m *appstore.Message) bool {

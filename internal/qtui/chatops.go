@@ -78,8 +78,9 @@ func (h *Host) opOpenChat(_ *Host, args json.RawMessage) (any, error) {
 			h.setState("chatTitle", name)
 			h.setState("chatSub", sub)
 			h.setState("chatIsGroup", isGroup)
+			h.setState("chatLeft", c.Left)
 			h.setState("chatAvatarPath", c.AvatarPath)
-			h.setState("chatTyping", "")
+			h.clearTyping()
 			caps := protocol.Caps{}
 			if svc != nil {
 				caps = svc.Caps()
@@ -104,8 +105,9 @@ func (h *Host) opCloseChat(_ *Host, _ json.RawMessage) (any, error) {
 		h.setState("chatJID", "")
 		h.setState("chatTitle", "")
 		h.setState("chatSub", "")
+		h.setState("chatLeft", false)
 		h.setState("chatAvatarPath", "")
-		h.setState("chatTyping", "")
+		h.clearTyping()
 		h.setState("chatE2EE", "unknown")
 	})
 	return map[string]any{}, nil
@@ -220,8 +222,14 @@ func (h *Host) opChatMembers(_ *Host, args json.RawMessage) (any, error) {
 		if ct, cerr := h.app.DB.GetContact(ctx, p.ID); cerr == nil && ct != nil && ct.Username != "" {
 			token = "@" + ct.Username // a real handle links up without a user id
 		}
+		// Mentions go on the wire in the group's addressing mode — a LID
+		// member carried as PN renders "@Unknown" on receiving clients.
+		pid := p.WireID
+		if pid == "" {
+			pid = p.ID
+		}
 		members = append(members, map[string]any{
-			"pid": p.ID, "name": name, "sub": sub, "token": token,
+			"pid": pid, "name": name, "sub": sub, "token": token,
 		})
 	}
 	sort.SliceStable(members, func(i, j int) bool {

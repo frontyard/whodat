@@ -74,7 +74,7 @@ func (a *App) ChatMenuItems(c *store.Chat) []MenuItem {
 		items = append(items, MenuItem{ID: ActMute, Label: mute})
 	}
 
-	if caps.Disappearing {
+	if caps.Disappearing && !c.Left {
 		disapp := "Disappearing messages"
 		if c.DisappSecs > 0 {
 			disapp = "Disappearing: " + DisappText(c.DisappSecs)
@@ -92,7 +92,7 @@ func (a *App) ChatMenuItems(c *store.Chat) []MenuItem {
 
 	items = append(items, MenuItem{ID: ActClear, Label: "Clear chat"})
 
-	if c.Kind == store.KindGroup && caps.Leave {
+	if c.Kind == store.KindGroup && caps.Leave && !c.Left {
 		items = append(items, MenuItem{ID: ActLeave, Label: "Leave group"})
 	} else if caps.DeleteChat {
 		items = append(items, MenuItem{ID: ActDelete, Label: "Delete chat"})

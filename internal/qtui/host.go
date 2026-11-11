@@ -46,6 +46,8 @@ type Host struct {
 	toastSeq    atomic.Int64
 	showSeq     atomic.Int64
 	subBase     string          // chat subtitle fallback (phone/"Group") for presence reset
+	typSeq      int             // typing-indicator epoch — bumps on every change so stale expiry timers can't clear newer state (Qt thread only)
+	typSender   store.PeerID    // sender whose name the typing label shows ("" in DMs / when idle)
 	recorder    *media.Recorder // active PTT capture (nil when idle)
 	recMu       sync.Mutex      // guards recorder — start/stop ops run on bridge goroutines
 	tray        *qt.QSystemTrayIcon
@@ -198,6 +200,7 @@ func NewHost(app *core.App) *Host {
 	h.setState("chatTitle", "")
 	h.setState("chatSub", "")
 	h.setState("chatIsGroup", false)
+	h.setState("chatLeft", false)
 	h.setState("chatAvatarPath", "")
 	h.setState("chatTyping", "")
 	h.setState("jumpTo", "")
@@ -418,6 +421,11 @@ func (h *Host) handleEvent(e protocol.Event) {
 		// Incoming messages in the open chat are marked read immediately —
 		// transcript logic; FromMe rows are filtered inside.
 		if h.sameChat(cj, h.msgs.jid) && e.Message != nil {
+			// A landed message ends that sender's composing state — the
+			// paused stanza that would clear it may never arrive.
+			if !e.Message.FromMe && (!h.msgs.isGroup || h.typSender == "" || h.typSender == e.Message.SenderJID) {
+				h.clearTyping()
+			}
 			h.markRead([]*store.Message{e.Message})
 		}
 	case protocol.EvMessageUpdated:
@@ -565,6 +573,7 @@ func (h *Host) refreshChatHeader() {
 			if c.Name != "" {
 				h.setState("chatTitle", c.Name)
 			}
+			h.setState("chatLeft", c.Left)
 			h.setState("chatAvatarPath", c.AvatarPath)
 			h.setState("chatE2EE", e2e)
 		})
@@ -599,7 +608,11 @@ func (h *Host) onTyping(t *protocol.TypingInfo) {
 		return
 	}
 	if !t.Composing {
-		h.setState("chatTyping", "")
+		// In groups a paused stanza clears only when it names the sender
+		// we're showing — another member's pause must not hide it.
+		if !h.msgs.isGroup || h.typSender == "" || h.typSender == t.SenderJID {
+			h.clearTyping()
+		}
 		return
 	}
 	who := ""
@@ -610,7 +623,28 @@ func (h *Host) onTyping(t *protocol.TypingInfo) {
 	if t.Recording {
 		label = "recording audio…"
 	}
+	h.typSeq++
+	h.typSender = t.SenderJID
 	h.setState("chatTyping", who+label)
+	// Peers don't reliably send "stopped typing" (offline, killed app,
+	// dropped stanza) — expire a stale indicator unless a fresh
+	// composing/paused event supersedes this one first.
+	seq := h.typSeq
+	time.AfterFunc(15*time.Second, func() {
+		mt(func() {
+			if h.typSeq == seq {
+				h.clearTyping()
+			}
+		})
+	})
+}
+
+// clearTyping hides the indicator and forgets the displayed sender.
+// Qt thread only.
+func (h *Host) clearTyping() {
+	h.typSeq++
+	h.typSender = ""
+	h.setState("chatTyping", "")
 }
 
 // onPresence reflects online/last-seen in the header subtitle (DMs).

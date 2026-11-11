@@ -67,7 +67,7 @@ func (d *DB) Close() error {
 	return d.sql.Close()
 }
 
-const schemaVersion = 10
+const schemaVersion = 12
 
 func (d *DB) migrate() error {
 	var v int
@@ -89,7 +89,8 @@ CREATE TABLE IF NOT EXISTS chats (
   pinned           INTEGER NOT NULL DEFAULT 0,
   archived         INTEGER NOT NULL DEFAULT 0,
   muted            INTEGER NOT NULL DEFAULT 0,
-  disapp_secs      INTEGER NOT NULL DEFAULT 0
+  disapp_secs      INTEGER NOT NULL DEFAULT 0,
+  left_group       INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS messages (
   chat_jid      TEXT NOT NULL,
@@ -100,6 +101,7 @@ CREATE TABLE IF NOT EXISTS messages (
   type          TEXT NOT NULL DEFAULT 'text',
   text          TEXT NOT NULL DEFAULT '',
   media_path    TEXT NOT NULL DEFAULT '',
+  media_thumb   TEXT NOT NULL DEFAULT '',
   media_mime    TEXT NOT NULL DEFAULT '',
   media_name    TEXT NOT NULL DEFAULT '',
   media_size    INTEGER NOT NULL DEFAULT 0,
@@ -171,6 +173,8 @@ CREATE TABLE IF NOT EXISTS poll_votes (
 		{"messages", "forwarded_from", "ALTER TABLE messages ADD COLUMN forwarded_from TEXT NOT NULL DEFAULT ''"},
 		{"messages", "link_preview", "ALTER TABLE messages ADD COLUMN link_preview TEXT NOT NULL DEFAULT ''"},
 		{"messages", "preview_url", "ALTER TABLE messages ADD COLUMN preview_url TEXT NOT NULL DEFAULT ''"},
+		{"messages", "media_thumb", "ALTER TABLE messages ADD COLUMN media_thumb TEXT NOT NULL DEFAULT ''"},
+		{"chats", "left_group", "ALTER TABLE chats ADD COLUMN left_group INTEGER NOT NULL DEFAULT 0"},
 	} {
 		if err := d.addColumn(c[0], c[1], c[2]); err != nil {
 			return err
