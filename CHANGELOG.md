@@ -12,6 +12,16 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+### Fixed
+- Backend jargon no longer reaches toasts — a shared error mapper
+  rewrites connection failures at the bridge and every direct-toast
+  path (media, calls, auth, chat actions), so a dead socket reads
+  "not connected", "context deadline exceeded" reads "timed out —
+  check your connection", dial/refused/reset errors read "can't
+  reach the server — check your connection", and an unpaired
+  session reads "session expired — link the device again"; the raw
+  error is still logged for debugging
+
 ## [0.2.0] - 2026-11-11
 
 ### Added
