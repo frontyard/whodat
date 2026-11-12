@@ -187,11 +187,11 @@ func (h *Host) opSendFile(_ *Host, args json.RawMessage) (any, error) {
 		defer cancel()
 		svc, err := svcForChat(h.app, a.JID)
 		if err != nil {
-			h.Toast("Upload failed: " + err.Error())
+			h.Toast("Upload failed: " + protocol.UserErr(err).Error())
 			return
 		}
 		if _, err := svc.SendMedia(ctx, a.JID, m, data); err != nil {
-			h.Toast("Upload failed: " + err.Error())
+			h.Toast("Upload failed: " + protocol.UserErr(err).Error())
 		}
 	}()
 	return map[string]any{}, nil
@@ -263,11 +263,11 @@ func (h *Host) opStopRecord(_ *Host, args json.RawMessage) (any, error) {
 		}
 		svc, err := svcForChat(h.app, a.JID)
 		if err != nil {
-			h.Toast("Voice message failed: " + err.Error())
+			h.Toast("Voice message failed: " + protocol.UserErr(err).Error())
 			return
 		}
 		if _, err := svc.SendMedia(ctx, a.JID, m, vn.Ogg); err != nil {
-			h.Toast("Voice message failed: " + err.Error())
+			h.Toast("Voice message failed: " + protocol.UserErr(err).Error())
 		}
 	}()
 	return map[string]any{}, nil

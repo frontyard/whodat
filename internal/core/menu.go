@@ -109,7 +109,7 @@ func (a *App) RunChatAction(c *store.Chat, id string) bool {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			if err := f(ctx); err != nil && a.Toast != nil {
-				a.Toast(pfx + ": " + err.Error())
+				a.Toast(pfx + ": " + protocol.UserErr(err).Error())
 			}
 		}()
 	}

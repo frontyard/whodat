@@ -53,7 +53,7 @@ func opAuthStart(h *Host, args json.RawMessage) (any, error) {
 	go func() {
 		if err := svc.Connect(context.Background()); err != nil {
 			h.app.Bus.For(svc.Acct()).Publish(protocol.Event{Kind: protocol.EvAuthStage,
-				AuthStage: protocol.StageFailed, AuthHint: err.Error()})
+				AuthStage: protocol.StageFailed, AuthHint: protocol.UserErr(err).Error()})
 		}
 	}()
 	return map[string]any{"acct": svc.Acct(), "stages": svc.AuthStages()}, nil

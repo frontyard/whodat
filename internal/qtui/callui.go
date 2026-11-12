@@ -14,6 +14,7 @@ import (
 	"github.com/mappu/miqt/qt6/multimedia"
 
 	"github.com/frontyard/whodat/internal/call"
+	"github.com/frontyard/whodat/internal/protocol"
 )
 
 // callui wires the call.Manager into QML: two QVideoSink-backed capture
@@ -67,7 +68,7 @@ func (h *Host) opStartCall(_ *Host, args json.RawMessage) (any, error) {
 		}
 		if err != nil {
 			log.Printf("call: start failed: %v", err)
-			h.Toast("Call failed: " + err.Error())
+			h.Toast("Call failed: " + protocol.UserErr(err).Error())
 			return
 		}
 		mt(func() { h.presentOutgoing(s) })
@@ -213,7 +214,7 @@ func (h *Host) opAnswerCall(_ *Host, _ json.RawMessage) (any, error) {
 	}
 	go func() {
 		if err := s.Answer(); err != nil {
-			h.Toast("Answer failed: " + err.Error())
+			h.Toast("Answer failed: " + protocol.UserErr(err).Error())
 			mt(func() { h.setState("callActive", false) })
 		}
 	}()

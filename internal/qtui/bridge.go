@@ -3,6 +3,8 @@ package qtui
 import (
 	"encoding/json"
 	"log"
+
+	"github.com/frontyard/whodat/internal/protocol"
 )
 
 // opFunc implements a bridge command. It runs on a background goroutine and
@@ -40,7 +42,8 @@ func (h *Host) dispatch(raw string) {
 		mt(func() {
 			r := replyPayload{ID: c.ID, OK: err == nil, Data: data}
 			if err != nil {
-				r.Error = err.Error()
+				log.Printf("qtui: op %s: %v", c.Op, err)
+				r.Error = protocol.UserErr(err).Error()
 			}
 			h.setReply(r)
 		})

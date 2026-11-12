@@ -596,7 +596,7 @@ func (h *Host) opResolvePeer(_ *Host, args json.RawMessage) (any, error) {
 	defer cancel()
 	jid, err := r.ResolvePeer(ctx, strings.TrimSpace(a.Query))
 	if err != nil {
-		return map[string]any{"ok": false, "err": err.Error()}, nil
+		return map[string]any{"ok": false, "err": protocol.UserErr(err).Error()}, nil
 	}
 	return map[string]any{"ok": true, "jid": jid}, nil
 }
