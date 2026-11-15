@@ -12,6 +12,8 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-11-15
+
 ### Fixed
 
 - Desktop notifications render @mentions as "@Name" instead of the raw
