@@ -1,0 +1,5 @@
+{
+  // Keep a Changelog repeats "### Added"/"### Fixed" under each release —
+  // only flag duplicate headings that are siblings under the same parent.
+  "MD024": { "siblings_only": true }
+}

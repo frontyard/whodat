@@ -13,6 +13,10 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 ## [Unreleased]
 
 ### Fixed
+
+- Desktop notifications render @mentions as "@Name" instead of the raw
+  "@\<digits\>" id — the body now goes through the same mention
+  resolution as the chat list and reply dialog
 - Backend jargon no longer reaches toasts — a shared error mapper
   rewrites connection failures at the bridge and every direct-toast
   path (media, calls, auth, chat actions), so a dead socket reads
@@ -21,10 +25,20 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
   reach the server — check your connection", and an unpaired
   session reads "session expired — link the device again"; the raw
   error is still logged for debugging
+- Clicking another app's desktop notification no longer pops the
+  window up — Qt's tray backend reports every ActionInvoked on the
+  session bus as messageClicked without checking which notification
+  it belongs to, so the handler now only fires while a fallback
+  balloon we actually showed is pending
+- Notification click-to-open only trusts ActionInvoked signals from
+  the current owner of org.freedesktop.Notifications and drops
+  stored notification ids when the daemon restarts — a fresh daemon
+  reuses ids that could collide with other apps' notifications
 
 ## [0.2.0] - 2026-11-11
 
 ### Added
+
 - Video and GIF bubbles show the sender-provided first frame as a
   poster while the attachment downloads — the thumbnail ships inside
   the message, and rows converted before this version extract it from
@@ -38,6 +52,7 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
   group notifications)
 
 ### Fixed
+
 - Typing indicator no longer gets stuck on — the peer's "stopped
   typing" stanza is unreliable, so the header label now expires 15s
   after the last composing event and clears immediately when that
@@ -57,6 +72,7 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 Initial release.
 
 ### Added
+
 - WhatsApp-only messenger — companion device on the multidevice
   protocol (hypermeow/whatsmeow): QR code or phone-number pairing,
   end-to-end encrypted, nothing proxied through third parties
@@ -81,7 +97,7 @@ Initial release.
 - Starred messages with jump-to
 - @mentions in group chats — the composer offers a member picker and
   sends real WhatsApp mentions (MentionedJID with LID/PN
-  counterparts); received "@<digits>" tokens render as "@Name"
+  counterparts); received "@\<digits\>" tokens render as "@Name"
 - Per-chat composer drafts — switching chats stashes the in-progress
   text, cursor, quoted/edit state and mentions, and restores them on
   return

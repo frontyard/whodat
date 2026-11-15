@@ -48,6 +48,8 @@ func (h *Host) watchNotifications() {
 			body := m.Text
 			if body == "" {
 				body = store.NotifyFallback(m.Type)
+			} else {
+				body = h.app.ResolveMentions(ctx, rowJID, body)
 			}
 			if m.SenderName != "" {
 				body = m.SenderName + ": " + body
@@ -139,21 +141,46 @@ func (h *Host) dbusNotify(title, body string, jid store.PeerID, iconPath string)
 
 // watchNotifActions opens the chat a notification click invoked — the
 // daemon reports it as an ActionInvoked signal for the "default" action,
-// and NotificationClosed reaps the id so the map can't grow.
+// and NotificationClosed reaps the id so the map can't grow. The signals
+// are broadcast, so they're only trusted from the Notifications service's
+// current owner; an owner change resets the daemon's id counter, and
+// stale ids would collide with other clients' notifications.
 func (h *Host) watchNotifActions() {
 	conn, err := portalBus()
 	if err != nil {
 		return
 	}
-	if err := conn.BusObject().Call("org.freedesktop.DBus.AddMatch", 0,
-		"type='signal',interface='org.freedesktop.Notifications'").Err; err != nil {
+	if err := conn.AddMatchSignal(
+		dbus.WithMatchInterface("org.freedesktop.Notifications"),
+	); err != nil {
+		return
+	}
+	if err := conn.AddMatchSignal(
+		dbus.WithMatchInterface("org.freedesktop.DBus"),
+		dbus.WithMatchMember("NameOwnerChanged"),
+		dbus.WithMatchArg(0, "org.freedesktop.Notifications"),
+	); err != nil {
 		return
 	}
 	ch := make(chan *dbus.Signal, 16)
 	conn.Signal(ch)
 	go func() {
+		owner := ""
+		_ = conn.BusObject().Call("org.freedesktop.DBus.GetNameOwner", 0,
+			"org.freedesktop.Notifications").Store(&owner)
 		for sig := range ch {
-			if len(sig.Body) < 1 {
+			if sig.Name == "org.freedesktop.DBus.NameOwnerChanged" {
+				if len(sig.Body) == 3 {
+					if o, _ := sig.Body[2].(string); o != owner {
+						owner = o
+						h.notifMu.Lock()
+						h.notifChat = map[uint32]store.PeerID{}
+						h.notifMu.Unlock()
+					}
+				}
+				continue
+			}
+			if len(sig.Body) < 1 || sig.Sender != owner {
 				continue
 			}
 			id, _ := sig.Body[0].(uint32)

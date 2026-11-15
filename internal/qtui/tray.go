@@ -38,13 +38,19 @@ func (h *Host) initTray() {
 		}
 	})
 	tray.OnMessageClicked(func() {
-		h.requestWindow()
-		if h.pendingChat != "" {
-			jid := h.pendingChat
-			h.pendingChat = ""
-			b, _ := json.Marshal(map[string]string{"jid": jid.String()})
-			_, _ = h.opOpenChat(h, b)
+		// Qt's SNI backend emits messageClicked for *every* ActionInvoked
+		// signal on the session bus — it never checks which notification
+		// the invocation belongs to (Qt 6.8, qdbustrayicon.cpp). Only a
+		// click while a fallback balloon we actually showed is pending
+		// counts; real notifications are handled in watchNotifActions.
+		if h.pendingChat == "" {
+			return
 		}
+		h.requestWindow()
+		jid := h.pendingChat
+		h.pendingChat = ""
+		b, _ := json.Marshal(map[string]string{"jid": jid.String()})
+		_, _ = h.opOpenChat(h, b)
 	})
 	tray.Show()
 
