@@ -12,7 +12,7 @@ the contract. Companion to the [README architecture section](README.md#architect
   routes between services) and `internal/qtui` (type-asserts optional
   interfaces, hides UI per capability flags).
 
-```
+```text
 internal/qtui         Qt UI — type-asserts the optional interfaces,
       │                hides UI elements whose Caps flag is false
       ▼
@@ -39,7 +39,7 @@ interface every account satisfies, capability flags, and the normalized
 group/auth types services exchange with the UI."*
 
 | File | Contents |
-|---|---|
+| --- | --- |
 | `service.go` | `Service` interface + normalized types (`AuthStage`, `GroupInfo`, `GroupParticipant`, `ParticipantChange`) |
 | `backend.go` | `Backend` descriptor, backend registry, `NextAcct` |
 | `ext.go` | Optional interfaces (`HistoryFetcher`, `PeerResolver`, `SessionLister`, `ContactLinker`, `PrivacyManager`, `Verifier`, `PeerIDs`) |
@@ -62,7 +62,7 @@ the wire boundary.
 Method groups:
 
 | Group | Methods | Notes |
-|---|---|---|
+| --- | --- | --- |
 | Identity + lifecycle | `Acct`, `Protocol`, `Paired`, `OwnID`, `Caps`, `Connect`, `Disconnect`, `Reset`, `Logout` | `Logout` unlinks **and erases this account's local data only**; `Reset` rebuilds a dead client without deleting the session |
 | Messaging | `SendText`, `SendMedia`, `SendReaction`, `SendStar`, `SendEdit`, `SendRevoke`, `Forward`, `MarkRead`, `SendTyping`, `SetPresence`, `SubscribePresence` | Message-creating sends return the stored `*store.Message` row so the UI can render immediately |
 | Chat + contact ops | `SetChatPin`, `SetChatArchive`, `SetChatMute`, `SetDisappearing`, `MarkChatUnreadSync`, `DeleteChat`, `LeaveGroup`, `UpdateChatName`, `GetProfilePictureURL`, `SetBlocked`, `IsBlocked` | Chat-level flags must sync to the account's *other devices*, not just locally |
@@ -91,7 +91,7 @@ picker lists whatever is compiled in — adding a protocol is one import +
 one `RegisterBackend` call.
 
 | Field | Meaning |
-|---|---|
+| --- | --- |
 | `Proto` | Stable key persisted in the accounts table (`"whatsapp"`) |
 | `Name` | Display name for the picker |
 | `AcctBase` | Account-id prefix allocated by `NextAcct` (`"wa"`) |
@@ -133,7 +133,7 @@ subscribers can attribute events to an account.
 Subscribers must not mutate shared fields.
 
 | Kind | Meaning |
-|---|---|
+| --- | --- |
 | `EvQRCode` | QR payload to display/refresh |
 | `EvPaired` | pairing succeeded, waiting for connect |
 | `EvConnected` / `EvDisconnected` | online / lost connection (auto-retry) |
@@ -182,7 +182,7 @@ type-asserts before offering the feature** (e.g. `internal/qtui/dialogops.go`,
 (`var _ protocol.X = (*Service)(nil)`).
 
 | Interface | Method(s) | Purpose |
-|---|---|---|
+| --- | --- | --- |
 
 | `HistoryFetcher` (ext.go) | `FetchEarlier(ctx, chatID, before, limit) (int, error)` | Pull older history from the server when local store runs out (scroll-back) |
 | `PeerResolver` | `ResolvePeer(ctx, query) (string, error)` | Turn a directory handle (phone number, `@username`) into a chat id |
@@ -235,7 +235,7 @@ fork): the account pairs as a **companion device** (like WhatsApp Web), and
 everything syncs through the phone's account, end-to-end encrypted.
 
 | File | Role |
-|---|---|
+| --- | --- |
 | `service.go` | Backend registration, client/session lifecycle, the single `dispatch` event handler, logout wipe |
 | `auth.go` | `AuthStages` / `StartAuth` / `SubmitAuth` |
 | `send.go` | Text/media/reactions/edits/revoke/forward/read/typing/presence + `PeerIDs` + `ResolvePeer` |
@@ -267,7 +267,7 @@ ticker sweeping expired disappearing messages.
 ### 2.2 Lifecycle mapping
 
 | `Service` | Implementation |
-|---|---|
+| --- | --- |
 | `Paired` | `Client.Store.ID != nil` — a stored device row means a session |
 | `OwnID` | Own JID without the device part (`ToNonAD()`), so it compares equal to sender JIDs stored elsewhere |
 | `Connect` | No-op if connected; starts the QR channel first when unpaired; publishes `EvSyncStart`; `Client.Connect` |
@@ -297,7 +297,7 @@ nothing.
 ### 2.4 Messaging
 
 | Operation | Mechanism |
-|---|---|
+| --- | --- |
 | `SendText` | `SendMessage` with `Conversation` or `ExtendedTextMessage` (quote context via `ContextInfo`); mention tokens rewrite to `@<digits>` + `ContextInfo.MentionedJID`; row persisted through the sink |
 | `SendMedia` | `Client.Upload` → `buildMediaMessage` (image/video/audio/PTT/sticker/document proto) → `SendMessage`; the full marshaled proto is stored on the row for later re-download |
 | `SendReaction` | `Client.BuildReaction` + send; mirrored locally through the same folding path as incoming reactions |
@@ -401,7 +401,7 @@ Optional interfaces implemented by the WhatsApp backend (`✓` implemented,
 `—` not):
 
 | Interface | WhatsApp |
-|---|---|
+| --- | --- |
 | `HistoryFetcher` | — |
 | `PeerResolver` | ✓ phone → JID |
 | `SessionLister` | ✓ companion devices |
@@ -415,7 +415,7 @@ Optional interfaces implemented by the WhatsApp backend (`✓` implemented,
 Auth surface:
 
 | | WhatsApp |
-|---|---|
+| --- | --- |
 | `AuthStages` | `qr`, `phone` |
 | QR flow | whatsmeow QR channel (companion link) |
 | Phone flow | 8-digit pairing code (`paircode` stage) |

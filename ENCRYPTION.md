@@ -4,7 +4,7 @@ What is and isn't encrypted in WhoDat — on the wire, end-to-end, and
 at rest. The short version:
 
 | Path | Transport encryption | End-to-end |
-|---|---|---|
+| --- | --- | --- |
 | WhatsApp messages | Noise socket (Curve25519) | ✅ Signal protocol |
 | WhatsApp media | E2E-encrypted blob over HTTPS | ✅ per-file AES key |
 | WhatsApp calls | SRTP (P2P) | ✅ |

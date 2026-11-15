@@ -1,5 +1,7 @@
 {
   // Keep a Changelog repeats "### Added"/"### Fixed" under each release —
   // only flag duplicate headings that are siblings under the same parent.
-  "MD024": { "siblings_only": true }
+  "MD024": { "siblings_only": true },
+  // Table rows and code-fence contents can't be wrapped to 80 cols.
+  "MD013": { "tables": false, "code_blocks": false }
 }

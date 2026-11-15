@@ -1,3 +1,4 @@
+<!-- markdownlint-disable MD013 MD033 MD041 -->
 <p align="center">
   <img src="internal/core/icon.svg" width="120" alt="WhoDat logo">
 </p>
@@ -9,10 +10,12 @@
 <p align="center">
   <a href="https://github.com/frontyard/whodat/releases"><img src="https://img.shields.io/github/v/release/frontyard/whodat" alt="Release"></a>
   <a href="https://github.com/frontyard/whodat/actions/workflows/release.yml"><img src="https://github.com/frontyard/whodat/actions/workflows/release.yml/badge.svg" alt="Build"></a>
+  <a href="https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
   <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/frontyard/whodat" alt="Go version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/frontyard/whodat" alt="License"></a>
   <img src="https://img.shields.io/badge/platform-Linux-blue" alt="Platform: Linux">
 </p>
+<!-- markdownlint-enable MD013 MD033 MD041 -->
 
 WhoDat is a WhatsApp messenger — one app, one local store,
 several accounts, talking the protocol directly (nothing proxied
@@ -92,7 +95,7 @@ usual GL/fontconfig/X11-or-Wayland stack; host GStreamer **plugins** are
 still used for calls (see below).
 
 | Purpose | Debian/Ubuntu | Fedora | Arch |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Qt6 base | `libqt6core6t64 libqt6gui6 libqt6widgets6` | `qt6-qtbase qt6-qtbase-gui` | `qt6-base` |
 | Qt6 Quick/QML | `libqt6qml6 libqt6quick6 libqt6quickcontrols2-6 libqt6quicktemplates2-6` | `qt6-qtdeclarative` | `qt6-declarative` |
 | Qt6 Multimedia | `libqt6multimedia6 libqt6multimediawidgets6` | `qt6-qtmultimedia` | `qt6-multimedia` |
@@ -169,7 +172,7 @@ is erased.
 
 ## Architecture
 
-```
+```text
 cmd/whodat/        entrypoint
 internal/
   config/          settings (JSON) + XDG paths
@@ -229,7 +232,7 @@ Copyright (C) 2026 WhoDat
 Third-party components:
 
 | Component | License |
-|---|---|
+| --- | --- |
 | [hypermeow](https://github.com/polymorfa/hypermeow) | MPL-2.0 |
 | [meowcaller](https://github.com/suhwr/meowcaller) | MIT |
 | [miqt](https://github.com/mappu/miqt) | MIT |
