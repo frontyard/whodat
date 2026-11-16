@@ -243,7 +243,7 @@ Item {
                     icon.source: Qt.resolvedUrl("icons/attach_file.svg")
                     icon.color: Theme.onSurfaceVariant
                     onClicked: attachMenu.popup(0, -attachMenu.implicitHeight)
-                    Menu {
+                    WdMenu {
                         id: attachMenu
                         WdMenuItem {
                             text: "Attach file…"
@@ -375,7 +375,7 @@ Item {
     }
 
     // "@" mention autocomplete — floats above the input, keyboard-driven.
-    Popup {
+    WdPopup {
         id: mentionPop
         parent: col
         y: -implicitHeight - 6

@@ -113,7 +113,7 @@ Item {
                 onClicked: (m) => bubbleMenu.popup(m.x, m.y)
             }
 
-            Menu {
+            WdMenu {
                 id: bubbleMenu
                 WdMenuItem { text: "Reply"; onTriggered: root.replyRequested(root.msgId, root.senderName, root.text) }
                 WdMenuItem {
@@ -162,7 +162,7 @@ Item {
 
             // quick-react popup. Opened via
             // callLater so the context-menu's closing click can't dismiss it.
-            Popup {
+            WdPopup {
                 id: reactPop
                 padding: 4
                 y: -implicitHeight - 6
@@ -511,36 +511,32 @@ Item {
                 }
             }
 
-            // hover react button — fades in centered on the bubble's outer
-            // side edge and opens the quick-react popup.
-            Rectangle {
-                id: reactFab
-                width: 30
-                height: 30
-                radius: 15
+            // hover action bar — fades in beside the bubble's outer side
+            // edge (in the gutter); when the gutter is too narrow the pill
+            // clamps to the window edge, overlapping the bubble instead.
+            MsgHoverBar {
+                id: hoverBar
                 z: 3
-                color: Theme.surfaceContainerHigh
-                border.color: Theme.outlineVariant
-                border.width: 1
+                canReact: root.canReact
+                canEdit: root.fromMe && !root.revoked && root.msgType === "text"
+
+                // bubble's x offset within the full-width row.
+                property real bx: root.fromMe ? root.width - 12 - parent.width : 12
                 anchors.verticalCenter: parent.verticalCenter
-                anchors.left: root.fromMe ? undefined : parent.right
-                anchors.leftMargin: 6
-                anchors.right: root.fromMe ? parent.left : undefined
-                anchors.rightMargin: 6
+                x: root.fromMe
+                   ? Math.max(-width - 6, 4 - bx)
+                   : Math.min(parent.width + 6, root.width - bx - width - 4)
                 visible: opacity > 0
-                opacity: (root.canReact && (rowHover.hovered || reactPop.opened)) ? 1 : 0
+                opacity: (rowHover.hovered || reactPop.opened) ? 1 : 0
                 scale: opacity > 0 ? 1 : 0.6
                 Behavior on opacity { NumberAnimation { duration: 130 } }
                 Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack; easing.overshoot: 3 } }
 
-                WdIcon {
-                    anchors.centerIn: parent
-                    source: Qt.resolvedUrl("icons/sentiment_satisfied.svg")
-                    color: Theme.onSurfaceVariant
-                    iconSize: 17
-                }
-                TapHandler { onTapped: reactPop.open() }
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                onReactClicked: reactPop.open()
+                onReplyClicked: root.replyRequested(root.msgId, root.senderName, root.text)
+                onForwardClicked: root.forwardRequested(root.msgId)
+                onEditClicked: root.editRequested(root.msgId, root.text)
+                onMoreClicked: bubbleMenu.popup(hoverBar, hoverBar.width - 4, hoverBar.height)
             }
 
             // reaction burst — the picked emoji springs out of the bubble's
@@ -659,7 +655,7 @@ Item {
 
                     // who-reacted popup — tap a chip for the avatar + name +
                     // emoji row of everyone who used it.
-                    Popup {
+                    WdPopup {
                         id: whoPop
                         padding: 8
                         y: -implicitHeight - 8
@@ -746,13 +742,13 @@ Item {
         } catch (e) { return null; }
     }
     function linkHost() {
-        var pv = linkCard();
+        var pv = root.linkCard();
         if (!pv) return "";
         var m = /^(?:[a-z][a-z0-9+.-]*:\/\/)?([^\s\/:]+)/i.exec(pv.url);
         return m ? m[1].replace(/^www\./, "") : pv.url;
     }
     function openLink() {
-        var pv = linkCard();
+        var pv = root.linkCard();
         if (!pv || pv.url === "") return;
         var u = pv.url;
         if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u;

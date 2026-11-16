@@ -169,7 +169,7 @@ Dialog {
                     }
                 }
             }
-            Menu {
+            WdMenu {
                 id: partMenu
                 property string jid: ""
                 property bool isAdmin: false

@@ -12,6 +12,14 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ## [Unreleased]
 
+### Added
+
+- Hovering a message now shows a quick-action pill — react, reply,
+  forward, edit (own text messages) and a ⋮ overflow that opens the
+  full context menu — instead of only the react button, in both
+  bubble and flat chat styles; the pill floats beside the bubble and
+  clamps to the window edge when the gutter is too narrow
+
 ## [0.2.1] - 2026-11-15
 
 ### Fixed

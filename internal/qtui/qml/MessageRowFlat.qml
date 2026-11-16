@@ -119,7 +119,7 @@ Item {
                 onClicked: (m) => rowMenu.popup(m.x, m.y)
             }
 
-            Menu {
+            WdMenu {
                 id: rowMenu
                 WdMenuItem { text: "Reply"; onTriggered: root.replyRequested(root.msgId, root.senderName, root.text) }
                 WdMenuItem {
@@ -168,7 +168,7 @@ Item {
 
             // quick-react popup — right edge so full-width rows can't push
             // it past the window edge.
-            Popup {
+            WdPopup {
                 id: reactPop
                 padding: 4
                 y: -implicitHeight - 6
@@ -555,7 +555,7 @@ Item {
 
                             // who-reacted popup — tap a token for the
                             // avatar + name + emoji of everyone who used it.
-                            Popup {
+                            WdPopup {
                                 id: whoPop
                                 padding: 8
                                 y: -implicitHeight - 6
@@ -597,34 +597,27 @@ Item {
                 }
             }
 
-            // hover react button — fades in on the row's right edge,
+            // hover action bar — fades in on the row's right edge,
             // vertically centered on the content.
-            Rectangle {
-                id: reactFab
-                width: 30
-                height: 30
-                radius: 15
+            MsgHoverBar {
+                id: hoverBar
                 z: 3
-                color: Theme.surfaceContainerHigh
-                border.color: Theme.outlineVariant
-                border.width: 1
+                canReact: root.canReact
+                canEdit: root.fromMe && !root.revoked && root.msgType === "text"
                 anchors.verticalCenter: parent.verticalCenter
                 anchors.right: parent.right
                 anchors.rightMargin: 6
                 visible: opacity > 0
-                opacity: (root.canReact && (rowHover.hovered || reactPop.opened)) ? 1 : 0
+                opacity: (rowHover.hovered || reactPop.opened) ? 1 : 0
                 scale: opacity > 0 ? 1 : 0.6
                 Behavior on opacity { NumberAnimation { duration: 130 } }
                 Behavior on scale { NumberAnimation { duration: 140; easing.type: Easing.OutBack; easing.overshoot: 3 } }
 
-                WdIcon {
-                    anchors.centerIn: parent
-                    source: Qt.resolvedUrl("icons/sentiment_satisfied.svg")
-                    color: Theme.onSurfaceVariant
-                    iconSize: 17
-                }
-                TapHandler { onTapped: reactPop.open() }
-                HoverHandler { cursorShape: Qt.PointingHandCursor }
+                onReactClicked: reactPop.open()
+                onReplyClicked: root.replyRequested(root.msgId, root.senderName, root.text)
+                onForwardClicked: root.forwardRequested(root.msgId)
+                onEditClicked: root.editRequested(root.msgId, root.text)
+                onMoreClicked: rowMenu.popup(hoverBar, hoverBar.width - 4, hoverBar.height)
             }
         }
 
@@ -672,13 +665,13 @@ Item {
         } catch (e) { return null; }
     }
     function linkHost() {
-        var pv = linkCard();
+        var pv = root.linkCard();
         if (!pv) return "";
         var m = /^(?:[a-z][a-z0-9+.-]*:\/\/)?([^\s\/:]+)/i.exec(pv.url);
         return m ? m[1].replace(/^www\./, "") : pv.url;
     }
     function openLink() {
-        var pv = linkCard();
+        var pv = root.linkCard();
         if (!pv || pv.url === "") return;
         var u = pv.url;
         if (!/^[a-z][a-z0-9+.-]*:/i.test(u)) u = "https://" + u;

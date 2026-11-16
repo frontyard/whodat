@@ -15,7 +15,7 @@ Item {
     // context-menu item model shared by row menus
     ListModel { id: menuModel }
 
-    Menu {
+    WdMenu {
         id: rowMenu
         property string jid: ""
         Instantiator {
@@ -84,7 +84,7 @@ Item {
                     icon.source: Qt.resolvedUrl("icons/add.svg")
                     icon.color: Theme.onSurfaceVariant
                     onClicked: newMenu.popup()
-                    Menu {
+                    WdMenu {
                         id: newMenu
                         WdMenuItem { text: "New chat"; onTriggered: side.dialogReq("newchat", "", 0) }
                         WdMenuItem { text: "New group"; onTriggered: side.dialogReq("newgroup", "", 0) }
@@ -96,7 +96,7 @@ Item {
                     icon.source: Qt.resolvedUrl("icons/more_vert.svg")
                     icon.color: Theme.onSurfaceVariant
                     onClicked: appMenu.popup()
-                    Menu {
+                    WdMenu {
                         id: appMenu
                         WdMenuItem { text: "New chat"; onTriggered: side.dialogReq("newchat", "", 0) }
                         WdMenuItem { text: "Accounts"; onTriggered: side.dialogReq("accounts", "", 0) }

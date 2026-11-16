@@ -303,7 +303,7 @@ Item {
 
     // chat context menu (header ⋮) — reuses the row-menu machinery
     ListModel { id: chatMenuModel }
-    Menu {
+    WdMenu {
         id: chatMenu
         Instantiator {
             model: chatMenuModel

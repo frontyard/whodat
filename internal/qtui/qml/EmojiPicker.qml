@@ -6,7 +6,7 @@ import QtQuick.Controls.Material
 // EmojiPicker is the composer's emoji popover: search + category grids +
 // "recently used" row. Data comes from the emojiData op (core.EmojiCats +
 // EmojiNames); picks are noted via noteEmoji and insert into the composer.
-Popup {
+WdPopup {
     id: pop
     width: 430
     height: 360

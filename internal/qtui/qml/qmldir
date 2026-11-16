@@ -11,6 +11,7 @@ LoginPage 1.0 LoginPage.qml
 MainPage 1.0 MainPage.qml
 MediaBlock 1.0 MediaBlock.qml
 MediaViewer 1.0 MediaViewer.qml
+MsgHoverBar 1.0 MsgHoverBar.qml
 MessageRow 1.0 MessageRow.qml
 MessageRowFlat 1.0 MessageRowFlat.qml
 PollDialog 1.0 PollDialog.qml
@@ -34,6 +35,8 @@ WdButton 1.0 WdButton.qml
 WdRoundButton 1.0 WdRoundButton.qml
 WdItemDelegate 1.0 WdItemDelegate.qml
 WdMenuItem 1.0 WdMenuItem.qml
+WdMenu 1.0 WdMenu.qml
+WdPopup 1.0 WdPopup.qml
 WdSwitchDelegate 1.0 WdSwitchDelegate.qml
 WdRadioButton 1.0 WdRadioButton.qml
 WdComboBox 1.0 WdComboBox.qml
