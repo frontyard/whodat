@@ -4,6 +4,12 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    ignore:
+      # Upstream's only tag is a permanent anchor on an old commit
+      # (they retracted v0.1.x and say "use @main or v0.0.0"); pinning
+      # it would downgrade. Real updates arrive as pseudo-versions.
+      - dependency-name: github.com/polymorfa/hypermeow
+        versions: ["0.0.0"]
     groups:
       minor-patch:
         update-types:

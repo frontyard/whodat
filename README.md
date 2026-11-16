@@ -1,21 +1,16 @@
-<!-- markdownlint-disable MD013 MD033 MD041 -->
-<p align="center">
-  <img src="internal/core/icon.svg" width="120" alt="WhoDat logo">
-</p>
-<h1 align="center">WhoDat</h1>
-<p align="center">
-  Unofficial <b>WhatsApp messaging app for Linux</b>, written in
-  Go with Qt6/QML.
-</p>
-<p align="center">
-  <a href="https://github.com/frontyard/whodat/releases"><img src="https://img.shields.io/github/v/release/frontyard/whodat" alt="Release"></a>
-  <a href="https://github.com/frontyard/whodat/actions/workflows/release.yml"><img src="https://github.com/frontyard/whodat/actions/workflows/release.yml/badge.svg" alt="Build"></a>
-  <a href="https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql"><img src="https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql/badge.svg" alt="CodeQL"></a>
-  <a href="go.mod"><img src="https://img.shields.io/github/go-mod/go-version/frontyard/whodat" alt="Go version"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/frontyard/whodat" alt="License"></a>
-  <img src="https://img.shields.io/badge/platform-Linux-blue" alt="Platform: Linux">
-</p>
-<!-- markdownlint-enable MD013 MD033 MD041 -->
+# WhoDat
+
+![WhoDat logo](internal/core/icon.svg)
+
+Unofficial **WhatsApp messaging app for Linux**, written in Go with
+Qt6/QML.
+
+[![Release](https://img.shields.io/github/v/release/frontyard/whodat)](https://github.com/frontyard/whodat/releases)
+[![Build](https://github.com/frontyard/whodat/actions/workflows/release.yml/badge.svg)](https://github.com/frontyard/whodat/actions/workflows/release.yml)
+[![CodeQL](https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/frontyard/whodat/actions/workflows/github-code-scanning/codeql)
+[![Go version](https://img.shields.io/github/go-mod/go-version/frontyard/whodat)](go.mod)
+[![License](https://img.shields.io/github/license/frontyard/whodat)](LICENSE)
+![Platform: Linux](https://img.shields.io/badge/platform-Linux-blue)
 
 WhoDat is a WhatsApp messenger — one app, one local store,
 several accounts, talking the protocol directly (nothing proxied
