@@ -8,7 +8,7 @@ ApplicationWindow {
     visible: true
     width: 1080
     height: 720
-    minimumWidth: 720
+    minimumWidth: 500
     minimumHeight: 480
     title: "WhoDat"
     color: Theme.surface

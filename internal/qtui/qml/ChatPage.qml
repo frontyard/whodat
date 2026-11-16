@@ -10,11 +10,26 @@ Item {
     id: page
     signal dialogReq(string name, string jid, int extra)
     signal chatActionReq(string jid, string id)
+    signal sidebarToggleRequested()
+    property bool sidebarCollapsed: false
 
     // ---- empty state ------------------------------------------------
     Item {
         anchors.fill: parent
         visible: App.chatJID === ""
+
+        WdIconButton {
+            visible: page.sidebarCollapsed
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.margins: 10
+            icon.source: Qt.resolvedUrl("icons/menu.svg")
+            icon.color: Theme.onSurfaceVariant
+            onClicked: page.sidebarToggleRequested()
+            ToolTip.text: "Show sidebar"
+            ToolTip.visible: hovered
+            ToolTip.delay: 400
+        }
 
         Column {
             anchors.centerIn: parent
@@ -50,6 +65,17 @@ Item {
                 anchors.leftMargin: 10
                 anchors.rightMargin: 6
                 spacing: 10
+
+                // ☰ expand sidebar — only when it's collapsed
+                WdIconButton {
+                    visible: page.sidebarCollapsed
+                    icon.source: Qt.resolvedUrl("icons/menu.svg")
+                    icon.color: Theme.onSurfaceVariant
+                    onClicked: page.sidebarToggleRequested()
+                    ToolTip.text: "Show sidebar"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 400
+                }
 
                 Avatar {
                     source: App.chatAvatarPath

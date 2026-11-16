@@ -28,22 +28,49 @@ Item {
         }
     }
 
+    // Sidebar collapse: manual via toggleSidebar(), automatic when the window
+    // narrows past 700. _autoCollapsed marks a collapse we caused so widening
+    // restores it; a manual collapse survives resizes either way.
+    property bool sidebarCollapsed: false
+    property bool _autoCollapsed: false
+    readonly property bool narrowWindow: width < 700
+
+    onNarrowWindowChanged: {
+        if (narrowWindow) {
+            if (!sidebarCollapsed) { sidebarCollapsed = true; _autoCollapsed = true; }
+        } else if (_autoCollapsed) {
+            sidebarCollapsed = false; _autoCollapsed = false;
+        }
+    }
+
+    function toggleSidebar() {
+        sidebarCollapsed = !sidebarCollapsed;
+        _autoCollapsed = false;
+    }
+
+    Component.onCompleted: if (narrowWindow) { sidebarCollapsed = true; _autoCollapsed = true; }
+
     RowLayout {
         anchors.fill: parent
         spacing: 0
 
         Rectangle {
-            Layout.preferredWidth: Theme.sidebarWidth
-            Layout.minimumWidth: 280
-            Layout.maximumWidth: 420
+            id: sidebarBox
+            implicitWidth: page.sidebarCollapsed ? 0 : Theme.sidebarWidth
             Layout.fillHeight: true
             color: Theme.surfaceContainerLow
+            clip: true
+
+            Behavior on implicitWidth {
+                NumberAnimation { duration: 150; easing.type: Easing.InOutQuad }
+            }
 
             Sidebar {
                 anchors.fill: parent
                 onChatSelected: (jid) => Bridge.cmd("openChat", {jid: jid})
                 onDialogReq: (name, jid, extra) => page.openDialog(name, jid, extra)
                 onChatActionReq: (jid, id) => page.chatAction(jid, id)
+                onCollapseRequested: page.toggleSidebar()
             }
         }
 
@@ -51,11 +78,14 @@ Item {
             Layout.preferredWidth: 1
             Layout.fillHeight: true
             color: Theme.outlineVariant
+            visible: sidebarBox.width > 0
         }
 
         ChatPage {
             Layout.fillWidth: true
             Layout.fillHeight: true
+            sidebarCollapsed: page.sidebarCollapsed
+            onSidebarToggleRequested: page.toggleSidebar()
             onDialogReq: (name, jid, extra) => page.openDialog(name, jid, extra)
             onChatActionReq: (jid, id) => page.chatAction(jid, id)
         }

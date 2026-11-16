@@ -10,6 +10,7 @@ Item {
     signal chatSelected(string jid)
     signal dialogReq(string name, string jid, int extra)
     signal chatActionReq(string jid, string id)
+    signal collapseRequested()
 
     // context-menu item model shared by row menus
     ListModel { id: menuModel }
@@ -55,12 +56,23 @@ Item {
 
             RowLayout {
                 anchors.fill: parent
-                anchors.leftMargin: 16
+                anchors.leftMargin: 8
                 anchors.rightMargin: 6
                 spacing: 0
 
+                // ‹ collapse sidebar
+                WdIconButton {
+                    icon.source: Qt.resolvedUrl("icons/arrow_back.svg")
+                    icon.color: Theme.onSurfaceVariant
+                    onClicked: side.collapseRequested()
+                    ToolTip.text: "Hide sidebar"
+                    ToolTip.visible: hovered
+                    ToolTip.delay: 400
+                }
+
                 Label {
                     text: "Chats"
+                    Layout.leftMargin: 8
                     font.pixelSize: 20
                     font.bold: true
                     color: Theme.onSurface
