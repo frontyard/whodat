@@ -19,3 +19,7 @@ Always rebuild and restart the app so the user sees the changes live:
 
 - No commits — the user commits manually.
 - Remote servers are read-only; deploys are done by the user.
+- Never write bare `@word` tokens in markdown (CHANGELOG.md, README, release
+  notes) — GitHub autolinks them as user mentions, which lists squatted
+  accounts (@unknown, @name, @digits) as release contributors and pings them.
+  Always wrap literal mention examples in backticks, e.g. `` `"@<digits>"` ``.

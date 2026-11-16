@@ -16,8 +16,8 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
 
 ### Fixed
 
-- Desktop notifications render @mentions as "@Name" instead of the raw
-  "@\<digits\>" id — the body now goes through the same mention
+- Desktop notifications render `@mentions` as `"@Name"` instead of the raw
+  `"@<digits>"` id — the body now goes through the same mention
   resolution as the chat list and reply dialog
 - Backend jargon no longer reaches toasts — a shared error mapper
   rewrites connection failures at the bridge and every direct-toast
@@ -62,8 +62,8 @@ commits, tags vX.Y.Z, and attaches this section to the GitHub release notes.
   pause/message no longer hides the active typist
 - Mentions in LID-mode groups no longer mint a phantom phone-number
   JID — picked members go on the wire in the group's addressing mode
-  and hand-typed "@digits" resolve through the LID map, so receiving
-  clients stopped rendering "@Unknown"
+  and hand-typed `"@digits"` resolve through the LID map, so receiving
+  clients stopped rendering `"@Unknown"`
 - Revoking or deleting a message now also removes its staged
   video-poster thumbnail instead of leaving it in the media dir
 - Video player transport buttons use real icons instead of text
@@ -97,9 +97,9 @@ Initial release.
   admin UI, block, security-code verification, disappearing-message
   timers
 - Starred messages with jump-to
-- @mentions in group chats — the composer offers a member picker and
+- `@mentions` in group chats — the composer offers a member picker and
   sends real WhatsApp mentions (MentionedJID with LID/PN
-  counterparts); received "@\<digits\>" tokens render as "@Name"
+  counterparts); received `"@<digits>"` tokens render as `"@Name"`
 - Per-chat composer drafts — switching chats stashes the in-progress
   text, cursor, quoted/edit state and mentions, and restores them on
   return
