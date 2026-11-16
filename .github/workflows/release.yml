@@ -52,7 +52,7 @@ jobs:
           # Go itself comes from setup-go below; Debian's golang is too old
           # for go.mod anyway.
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # Steps in this container run as root while the workspace stays owned
       # by the host runner uid — git refuses the repo ("not in a git
@@ -98,7 +98,7 @@ jobs:
           ln -sf /opt/linuxdeploy-plugin-qt.dir/AppRun /usr/local/bin/linuxdeploy-plugin-qt
           linuxdeploy --version
 
-      - uses: actions/setup-go@v5
+      - uses: actions/setup-go@v7
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -170,7 +170,7 @@ jobs:
         run: make appimage VERSION="${{ steps.ver.outputs.tag }}"
 
       - name: upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: whodat-${{ steps.ver.outputs.tag }}
           path: |
@@ -194,7 +194,7 @@ jobs:
 
       - name: release
         if: github.event_name == 'push' || inputs.version != 'dev'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.ver.outputs.tag }}
           body_path: release-notes.md
@@ -220,7 +220,7 @@ jobs:
             gstreamer1.0-plugins-base gstreamer1.0-plugins-good
           curl -fsSL https://go.dev/dl/go1.26.0.linux-amd64.tar.gz | tar -C /usr/local -xz
           ln -sf /usr/local/go/bin/go /usr/local/bin/go
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: mark workspace safe for git
         run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
       - name: vet + test
