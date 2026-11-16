@@ -7,7 +7,7 @@ require (
 	github.com/go-gst/go-gst v1.4.0
 	github.com/godbus/dbus/v5 v5.2.4
 	github.com/mappu/miqt v0.15.0
-	github.com/polymorfa/hypermeow v0.0.0-20261026020717-7852ff1c1718
+	github.com/polymorfa/hypermeow v0.0.0
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/suhwr/meowcaller v0.0.0-20261101042713-a97c8fecdfc0
 	golang.org/x/image v0.48.0
