@@ -21,12 +21,15 @@ Dialog {
             chatStyleCombo.currentIndex = Math.max(0, ["bubbles","flat"].indexOf(data.chatStyle || "bubbles"));
             var langs = data.languages || [];
             langRow.visible = langs.length > 0;
-            langCombo._codes = [""].concat(langs);
-            langCombo.model = [qsTr("System default")].concat(langs.map(function(c) {
-                var name = Qt.locale(c).nativeLanguageName;
-                return name.charAt(0).toUpperCase() + name.slice(1);
-            }));
-            langCombo.currentIndex = Math.max(0, langCombo._codes.indexOf(data.language || ""));
+            var pairs = ["en"].concat(langs).map(function(c) {
+                return {code: c, name: c === "en" ? "English" : Qt.locale(c).nativeLanguageName};
+            });
+            pairs.sort(function(a, b) { return a.name.localeCompare(b.name); });
+            langCombo._codes = pairs.map(function(p) { return p.code; });
+            langCombo.model = pairs.map(function(p) {
+                return p.name.charAt(0).toUpperCase() + p.name.slice(1);
+            });
+            langCombo.currentIndex = Math.max(0, langCombo._codes.indexOf(data.language || "en"));
             notifSw.checked = data.notifications === true;
             traySw.checked = data.closeToTray === true;
             autoSw.checked = data.autostart === true;
@@ -72,15 +75,23 @@ Dialog {
         RowLayout {
             id: langRow
             Layout.fillWidth: true
-            Label { text: qsTr("Language"); Layout.fillWidth: true; color: Theme.onSurface }
-            ColumnLayout {
-                WdComboBox {
-                    id: langCombo
-                    property var _codes: [""]
-                    model: [qsTr("System default")]
-                    onActivated: dlg.set("language", _codes[currentIndex] || "")
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: langCol.implicitHeight
+                Column {
+                    id: langCol
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    Label { text: qsTr("Language"); color: Theme.onSurface }
+                    Label { text: qsTr("Applies after restart"); color: Theme.onSurfaceVariant; font.pixelSize: 12 }
                 }
-                Label { text: qsTr("Applies after restart"); color: Theme.onSurfaceVariant; font.pixelSize: 12 }
+            }
+            WdComboBox {
+                id: langCombo
+                Layout.alignment: Qt.AlignRight
+                property var _codes: ["en"]
+                model: ["English"]
+                onActivated: dlg.set("language", _codes[currentIndex])
             }
         }
 

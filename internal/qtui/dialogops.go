@@ -47,6 +47,12 @@ func (h *Host) registerDialogOps() {
 // opGetConfig returns the settings dialog's view of the config.
 func (h *Host) opGetConfig(_ *Host, _ json.RawMessage) (any, error) {
 	p := h.app.Cfg.Snapshot()
+	// Report the effective language, not the raw pref — an unset pref follows
+	// the system locale, and the dropdown shows whichever language is live.
+	lang := i18n.DetectLang(p.Language, qt.QLocale_System().UiLanguages(), Languages())
+	if lang == "" {
+		lang = "en"
+	}
 	return map[string]any{
 		"theme":           p.Theme,
 		"notifications":   p.Notifications,
@@ -55,7 +61,7 @@ func (h *Host) opGetConfig(_ *Host, _ json.RawMessage) (any, error) {
 		"showGroupCalls":  p.ShowGroupCalls,
 		"autoDownloadMax": p.AutoDownloadMax,
 		"chatStyle":       p.ChatStyle,
-		"language":        p.Language,
+		"language":        lang,
 		"languages":       Languages(),
 	}, nil
 }
@@ -132,7 +138,7 @@ func (h *Host) opSetConfig(_ *Host, args json.RawMessage) (any, error) {
 		if err := json.Unmarshal(a.Value, &v); err != nil {
 			return nil, err
 		}
-		if v != "" && v != "system" && !slices.Contains(Languages(), v) {
+		if v != "" && v != "system" && v != "en" && !slices.Contains(Languages(), v) {
 			return nil, errors.New(i18n.T("unknown language %1", v))
 		}
 		// Translators install at startup — the new language takes effect

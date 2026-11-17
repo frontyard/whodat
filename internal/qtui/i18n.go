@@ -69,6 +69,9 @@ func (h *Host) setupI18n() {
 		}
 		return ""
 	})
+	// installTranslator reports failure on an "empty" translator — with the
+	// data living in our Go catalog, the base isEmpty() is always true.
+	t.OnIsEmpty(func(_ func() bool) bool { return len(cat.Messages()) == 0 })
 	if !qt.QCoreApplication_InstallTranslator(t) {
 		log.Printf("i18n: installTranslator failed")
 		return

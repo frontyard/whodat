@@ -875,10 +875,6 @@ Not affiliated with WhatsApp or Meta.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>System default</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>Setting failed: %1</source>
         <translation type="unfinished"></translation>
     </message>
