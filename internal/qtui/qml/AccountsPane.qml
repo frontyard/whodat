@@ -45,6 +45,17 @@ Item {
         });
     }
 
+    // connState codes stay codes for logic — this maps them to display.
+    function connText(st) {
+        switch (st) {
+        case "online":     return qsTr("online");
+        case "pair":       return qsTr("pairing");
+        case "connecting": return qsTr("connecting");
+        case "boot":       return "";
+        default:           return st;
+        }
+    }
+
     // Live-refresh rows on conn-state changes, and return to the list
     // whenever the auth flow clears its acct (paired/cancelled/backed out).
     property var _connW: App.connStates
@@ -71,7 +82,7 @@ Item {
 
             Label {
                 visible: acctList.count === 0
-                text: "No accounts yet — link one to get started."
+                text: qsTr("No accounts yet — link one to get started.")
                 color: Theme.onSurfaceVariant
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
@@ -118,7 +129,7 @@ Item {
                                 Layout.fillWidth: true
                             }
                             Label {
-                                text: modelData.connState || ""
+                                text: pane.connText(modelData.connState)
                                 color: Theme.onSurfaceVariant
                                 font.pixelSize: 12
                                 elide: Text.ElideRight
@@ -126,7 +137,7 @@ Item {
                             }
                         }
                         WdButton {
-                            text: "Log out"
+                            text: qsTr("Log out")
                             flat: true
                             Material.foreground: Theme.error
                             onClicked: Bridge.cmd("logoutAccount", {acct: modelData.acct},

@@ -6,7 +6,7 @@ import QtQuick.Controls.Material
 // VerifyDialog shows the 60-digit E2E safety number for a DM.
 Dialog {
     id: dlg
-    title: "Verify security code"
+    title: qsTr("Verify security code")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -17,10 +17,10 @@ Dialog {
 
     function openFor(jid) {
         dlg.jid = jid;
-        codeLbl.text = "Loading…";
+        codeLbl.text = qsTr("Loading…");
         dlg.open();
         Bridge.cmd("verifyCodes", {jid: jid}, function(ok, data, err) {
-            codeLbl.text = ok ? data.code : ("Could not load codes: " + err);
+            codeLbl.text = ok ? data.code : qsTr("Could not load codes: %1").arg(err);
         });
     }
 
@@ -29,7 +29,7 @@ Dialog {
         spacing: 10
 
         Label {
-            text: "Compare this 60-digit code with the one on your contact's phone."
+            text: qsTr("Compare this 60-digit code with the one on your contact's phone.")
             wrapMode: Text.WordWrap
             Layout.fillWidth: true
             color: Theme.onSurfaceVariant

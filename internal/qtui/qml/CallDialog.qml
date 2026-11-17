@@ -141,7 +141,7 @@ Window {
                         callWin.placeLocal();
                     }
                     ToolTip.visible: containsMouse
-                    ToolTip.text: "Click to move preview"
+                    ToolTip.text: qsTr("Click to move preview")
                 }
             }
 
@@ -166,7 +166,7 @@ Window {
                     anchors.fill: parent
                     hoverEnabled: true
                     ToolTip.visible: containsMouse
-                    ToolTip.text: "Encryption verification — these emojis should match on the other end"
+                    ToolTip.text: qsTr("Encryption verification — these emojis should match on the other end")
                 }
             }
         }
@@ -194,7 +194,7 @@ Window {
                     implicitHeight: 56
                     onClicked: Bridge.cmd("rejectCall", {})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Decline"
+                    ToolTip.text: qsTr("Decline")
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl("icons/call.svg")
@@ -207,7 +207,7 @@ Window {
                     implicitHeight: 56
                     onClicked: Bridge.cmd("answerCall", {})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Accept"
+                    ToolTip.text: qsTr("Accept")
                 }
             }
 
@@ -227,7 +227,7 @@ Window {
                     implicitHeight: 52
                     onClicked: Bridge.cmd("muteCall", {on: !App.callMuted})
                     ToolTip.visible: hovered
-                    ToolTip.text: App.callMuted ? "Unmute" : "Mute"
+                    ToolTip.text: App.callMuted ? qsTr("Unmute") : qsTr("Mute")
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl(App.callVideo ? "icons/videocam.svg" : "icons/videocam_off.svg")
@@ -239,7 +239,7 @@ Window {
                     implicitHeight: 52
                     onClicked: Bridge.cmd("videoCall", {on: !App.callVideo})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Toggle video"
+                    ToolTip.text: qsTr("Toggle video")
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl("icons/rotate_left.svg")
@@ -251,7 +251,7 @@ Window {
                     implicitHeight: 52
                     onClicked: Bridge.cmd("rotateVideo", {turns: 3})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Rotate incoming video left"
+                    ToolTip.text: qsTr("Rotate incoming video left")
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl("icons/rotate_right.svg")
@@ -263,7 +263,7 @@ Window {
                     implicitHeight: 52
                     onClicked: Bridge.cmd("rotateVideo", {turns: 1})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Rotate incoming video right"
+                    ToolTip.text: qsTr("Rotate incoming video right")
                 }
                 WdRoundButton {
                     icon.source: Qt.resolvedUrl("icons/call_end.svg")
@@ -276,7 +276,7 @@ Window {
                     implicitHeight: 52
                     onClicked: Bridge.cmd("hangupCall", {})
                     ToolTip.visible: hovered
-                    ToolTip.text: "Hang up"
+                    ToolTip.text: qsTr("Hang up")
                 }
             }
 
@@ -284,7 +284,7 @@ Window {
             Label {
                 anchors.centerIn: parent
                 visible: App.callEnded === true
-                text: "Call ended" + (App.callEndedReason !== "" ? " — " + App.callEndedReason : "")
+                text: App.callEndedReason !== "" ? qsTr("Call ended — %1").arg(App.callEndedReason) : qsTr("Call ended")
                 color: Theme.onSurfaceVariant
                 font.pixelSize: 14
             }

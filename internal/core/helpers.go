@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/store"
 )
 
@@ -133,9 +134,9 @@ func FmtDay(t time.Time) string {
 	now := time.Now()
 	switch {
 	case SameDay(t, now):
-		return "Today"
+		return i18n.T("Today")
 	case SameDay(t, now.AddDate(0, 0, -1)):
-		return "Yesterday"
+		return i18n.T("Yesterday")
 	default:
 		return t.Format("Mon, 2 Jan 2006")
 	}
@@ -213,13 +214,13 @@ func StatusGlyph(s store.MsgStatus) string {
 func DisappText(secs int) string {
 	switch {
 	case secs >= 90*24*3600:
-		return "90 days"
+		return i18n.Tn("%n day", "%n days", 90)
 	case secs >= 7*24*3600:
-		return "7 days"
+		return i18n.Tn("%n day", "%n days", 7)
 	case secs >= 24*3600:
-		return "24 hours"
+		return i18n.Tn("%n hour", "%n hours", 24)
 	case secs >= 3600:
-		return "1 hour"
+		return i18n.Tn("%n hour", "%n hours", 1)
 	default:
 		return FmtDur(secs)
 	}
@@ -277,26 +278,26 @@ func MimeForExt(ext string) string {
 func PreviewText(m *store.Message) string {
 	switch m.Type {
 	case store.TImage:
-		return "📷 Photo"
+		return "📷 " + i18n.T("Photo")
 	case store.TVideo:
-		return "🎬 Video"
+		return "🎬 " + i18n.T("Video")
 	case store.TAudio, store.TPTT:
-		return "🎤 Voice message"
+		return "🎤 " + i18n.T("Voice message")
 	case store.TDocument:
 		if m.MediaName != "" {
 			return "📄 " + m.MediaName
 		}
-		return "📄 Document"
+		return "📄 " + i18n.T("Document")
 	case store.TSticker:
-		return "Sticker"
+		return i18n.T("Sticker")
 	case store.TPoll:
-		return "📊 Poll"
+		return "📊 " + i18n.T("Poll")
 	case store.TCall:
-		return "📞 Call"
+		return "📞 " + i18n.T("Call")
 	case store.TLocation:
-		return "📍 Location"
+		return "📍 " + i18n.T("Location")
 	case store.TRevoked:
-		return "Message deleted"
+		return i18n.T("Message deleted")
 	}
-	return "Message"
+	return i18n.T("Message")
 }

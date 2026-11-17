@@ -12,6 +12,7 @@ import (
 	qt "github.com/mappu/miqt/qt6"
 
 	"github.com/frontyard/whodat/internal/core"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/media"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
@@ -105,7 +106,7 @@ func (h *Host) opOpenMedia(_ *Host, args json.RawMessage) (any, error) {
 	}
 	mt(func() {
 		if !qt.QDesktopServices_OpenUrl(qt.QUrl_FromLocalFile(p)) {
-			h.Toast("No application can open this file")
+			h.Toast(i18n.T("No application can open this file"))
 		}
 	})
 	return map[string]any{}, nil
@@ -187,11 +188,11 @@ func (h *Host) opSendFile(_ *Host, args json.RawMessage) (any, error) {
 		defer cancel()
 		svc, err := svcForChat(h.app, a.JID)
 		if err != nil {
-			h.Toast("Upload failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Upload failed: %1", protocol.UserErr(err).Error()))
 			return
 		}
 		if _, err := svc.SendMedia(ctx, a.JID, m, data); err != nil {
-			h.Toast("Upload failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Upload failed: %1", protocol.UserErr(err).Error()))
 		}
 	}()
 	return map[string]any{}, nil
@@ -242,11 +243,11 @@ func (h *Host) opStopRecord(_ *Host, args json.RawMessage) (any, error) {
 			return
 		}
 		if err != nil {
-			h.Toast("Couldn't encode voice message")
+			h.Toast(i18n.T("Couldn't encode voice message"))
 			return
 		}
 		if vn.Seconds == 0 {
-			h.Toast("Recording too short")
+			h.Toast(i18n.T("Recording too short"))
 			return
 		}
 		ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
@@ -263,11 +264,11 @@ func (h *Host) opStopRecord(_ *Host, args json.RawMessage) (any, error) {
 		}
 		svc, err := svcForChat(h.app, a.JID)
 		if err != nil {
-			h.Toast("Voice message failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Voice message failed: %1", protocol.UserErr(err).Error()))
 			return
 		}
 		if _, err := svc.SendMedia(ctx, a.JID, m, vn.Ogg); err != nil {
-			h.Toast("Voice message failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Voice message failed: %1", protocol.UserErr(err).Error()))
 		}
 	}()
 	return map[string]any{}, nil

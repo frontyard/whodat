@@ -3,7 +3,6 @@ package wa
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"regexp"
 	"sort"
@@ -15,6 +14,7 @@ import (
 	"github.com/polymorfa/hypermeow/types"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/linkprev"
 	"github.com/frontyard/whodat/internal/media"
 	"github.com/frontyard/whodat/internal/protocol"
@@ -232,7 +232,7 @@ func (s *Service) SendEdit(ctx context.Context, chatJID appstore.PeerID, target 
 		return err
 	}
 	if !target.FromMe {
-		return errors.New("can only edit own messages")
+		return errors.New(i18n.T("can only edit own messages"))
 	}
 	newContent := &waE2E.Message{Conversation: proto.String(newText)}
 	wm := s.Client().BuildEdit(jid, target.ID, newContent)
@@ -545,7 +545,7 @@ func (s *Service) GetProfilePictureURL(ctx context.Context, jidStr appstore.Peer
 		return "", err
 	}
 	if info == nil {
-		return "", errors.New("no picture")
+		return "", errors.New(i18n.T("no picture"))
 	}
 	return info.URL, nil
 }
@@ -711,14 +711,14 @@ func (s *Service) NumberJID(ctx context.Context, jidStr appstore.PeerID) appstor
 func (s *Service) ResolvePeer(ctx context.Context, query string) (appstore.PeerID, error) {
 	num := digitsOnly(query)
 	if num == "" {
-		return "", errors.New("no digits in query")
+		return "", errors.New(i18n.T("no digits in query"))
 	}
 	res, err := s.IsOnWhatsApp(ctx, []string{num})
 	if err != nil {
 		return "", err
 	}
 	if !res[num] {
-		return "", fmt.Errorf("%s is not on WhatsApp", num)
+		return "", errors.New(i18n.T("%1 is not on WhatsApp", num))
 	}
 	return s.cid(types.NewJID(num, types.DefaultUserServer).String()), nil
 }

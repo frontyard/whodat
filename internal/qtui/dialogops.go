@@ -3,9 +3,10 @@ package qtui
 import (
 	"context"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/frontyard/whodat/internal/config"
 	"github.com/frontyard/whodat/internal/core"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -53,6 +55,8 @@ func (h *Host) opGetConfig(_ *Host, _ json.RawMessage) (any, error) {
 		"showGroupCalls":  p.ShowGroupCalls,
 		"autoDownloadMax": p.AutoDownloadMax,
 		"chatStyle":       p.ChatStyle,
+		"language":        p.Language,
+		"languages":       Languages(),
 	}, nil
 }
 
@@ -119,12 +123,23 @@ func (h *Host) opSetConfig(_ *Host, args json.RawMessage) (any, error) {
 			return nil, err
 		}
 		if v != "bubbles" && v != "flat" {
-			return nil, fmt.Errorf("invalid chatStyle %q", v)
+			return nil, errors.New(i18n.T("invalid chatStyle %1", v))
 		}
 		apply = func(p *config.Prefs) { p.ChatStyle = v }
 		mt(func() { h.setState("chatStyle", v) })
+	case "language":
+		var v string
+		if err := json.Unmarshal(a.Value, &v); err != nil {
+			return nil, err
+		}
+		if v != "" && v != "system" && !slices.Contains(Languages(), v) {
+			return nil, errors.New(i18n.T("unknown language %1", v))
+		}
+		// Translators install at startup — the new language takes effect
+		// after restart.
+		apply = func(p *config.Prefs) { p.Language = v }
 	default:
-		return nil, fmt.Errorf("unknown config key %q", a.Key)
+		return nil, errors.New(i18n.T("unknown config key %1", a.Key))
 	}
 	if err := c.Update(apply); err != nil {
 		return nil, err
@@ -146,11 +161,11 @@ func (h *Host) svcForAcct(args json.RawMessage) (protocol.Service, string, error
 		if s := h.app.Svc(a.Acct); s != nil {
 			return s, a.Acct, nil
 		}
-		return nil, a.Acct, fmt.Errorf("no such account")
+		return nil, a.Acct, errors.New(i18n.T("no such account"))
 	}
 	s := h.app.Primary()
 	if s == nil {
-		return nil, "", fmt.Errorf("no account")
+		return nil, "", errors.New(i18n.T("no account"))
 	}
 	return s, s.Acct(), nil
 }
@@ -164,7 +179,7 @@ func (h *Host) opLinkedDevices(_ *Host, args json.RawMessage) (any, error) {
 	}
 	l, ok := svc.(protocol.SessionLister)
 	if !ok {
-		return nil, fmt.Errorf("not supported on %s", acct)
+		return nil, errors.New(i18n.T("not supported on %1", acct))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -184,7 +199,7 @@ func (h *Host) opPrivacyGet(_ *Host, args json.RawMessage) (any, error) {
 	}
 	m, ok := svc.(protocol.PrivacyManager)
 	if !ok {
-		return nil, fmt.Errorf("not supported on %s", acct)
+		return nil, errors.New(i18n.T("not supported on %1", acct))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -205,7 +220,7 @@ func (h *Host) opPrivacySet(_ *Host, args json.RawMessage) (any, error) {
 	}
 	m, ok := svc.(protocol.PrivacyManager)
 	if !ok {
-		return nil, fmt.Errorf("not supported on %s", acct)
+		return nil, errors.New(i18n.T("not supported on %1", acct))
 	}
 	var a struct {
 		Name  string `json:"name"`
@@ -233,7 +248,7 @@ func (h *Host) opContactQR(_ *Host, args json.RawMessage) (any, error) {
 	defer cancel()
 	l, ok := svc.(protocol.ContactLinker)
 	if !ok {
-		return nil, fmt.Errorf("not supported on %s", acct)
+		return nil, errors.New(i18n.T("not supported on %1", acct))
 	}
 	link, err := l.ContactLink(ctx)
 	if err != nil {
@@ -262,7 +277,7 @@ func (h *Host) opChatInfo(_ *Host, args json.RawMessage) (any, error) {
 	ctx := context.Background()
 	c, err := h.app.DB.GetChat(ctx, a.JID)
 	if err != nil || c == nil {
-		return nil, fmt.Errorf("chat not found")
+		return nil, errors.New(i18n.T("chat not found"))
 	}
 	starred, _ := h.app.DB.StarredMessages(ctx, a.JID)
 	out := map[string]any{
@@ -300,7 +315,7 @@ func (h *Host) opStarredMessages(_ *Host, args json.RawMessage) (any, error) {
 	for _, m := range msgs {
 		who := m.SenderName
 		if m.FromMe {
-			who = "You"
+			who = i18n.T("You")
 		} else if who == "" {
 			who = h.app.NumberOf(context.Background(), m.SenderJID)
 		}
@@ -335,14 +350,14 @@ func (h *Host) opVerifyCodes(_ *Host, args json.RawMessage) (any, error) {
 	}
 	v, ok := svc.(protocol.Verifier)
 	if !ok {
-		return nil, fmt.Errorf("encryption verification not supported")
+		return nil, errors.New(i18n.T("encryption verification not supported"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	code, err := v.VerifyCode(ctx, a.JID)
 	if err != nil || code == "" {
 		if err == nil {
-			err = fmt.Errorf("empty codes")
+			err = errors.New(i18n.T("empty codes"))
 		}
 		return nil, err
 	}
@@ -519,7 +534,7 @@ func (h *Host) opGroupUpdate(_ *Host, args json.RawMessage) (any, error) {
 	case "demote":
 		act = protocol.ParticipantDemote
 	default:
-		return nil, fmt.Errorf("unknown action %q", a.Action)
+		return nil, errors.New(i18n.T("unknown action %1", a.Action))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
@@ -643,7 +658,7 @@ func (h *Host) opCreateGroup(_ *Host, args json.RawMessage) (any, error) {
 		svc = h.app.Primary()
 	}
 	if svc == nil {
-		return nil, fmt.Errorf("no account")
+		return nil, errors.New(i18n.T("no account"))
 	}
 	// Raw handles go to the service — the backend normalizes its own id
 	// form (phone digits → JIDs).
@@ -660,7 +675,7 @@ func (h *Host) opCreateGroup(_ *Host, args json.RawMessage) (any, error) {
 		}
 	}
 	if strings.TrimSpace(a.Name) == "" {
-		return nil, fmt.Errorf("name the group")
+		return nil, errors.New(i18n.T("name the group"))
 	}
 	gi, err := svc.CreateGroup(ctx, strings.TrimSpace(a.Name), parts)
 	if err != nil {

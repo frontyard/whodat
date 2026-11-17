@@ -4,8 +4,12 @@ import (
 	"context"
 	"errors"
 	"strings"
+
+	"github.com/frontyard/whodat/internal/i18n"
 )
 
+// The Err* values are message identity only — UserErr re-creates them with
+// the message translated at call time, so language changes apply per toast.
 var (
 	ErrNotConnected   = errors.New("not connected")
 	ErrConnTimeout    = errors.New("timed out — check your connection")
@@ -22,25 +26,25 @@ func UserErr(err error) error {
 	case err == nil:
 		return nil
 	case errors.Is(err, context.Canceled):
-		return errors.New("cancelled")
+		return errors.New(i18n.T("cancelled"))
 	case errors.Is(err, context.DeadlineExceeded):
-		return ErrConnTimeout
+		return errors.New(i18n.T("timed out — check your connection"))
 	}
 	switch m := err.Error(); {
 	case strings.Contains(m, "the store doesn't contain a device JID"):
-		return ErrSessionExpired
+		return errors.New(i18n.T("session expired — link the device again"))
 	case strings.Contains(m, "websocket not connected"):
-		return ErrNotConnected
+		return errors.New(i18n.T("not connected"))
 	case strings.Contains(m, "timed out"),
 		strings.Contains(m, "deadline exceeded"),
 		strings.Contains(m, "i/o timeout"):
-		return ErrConnTimeout
+		return errors.New(i18n.T("timed out — check your connection"))
 	case strings.Contains(m, "no such host"),
 		strings.Contains(m, "connection refused"),
 		strings.Contains(m, "connection reset"),
 		strings.Contains(m, "network is unreachable"),
 		strings.Contains(m, "broken pipe"):
-		return ErrUnreachable
+		return errors.New(i18n.T("can't reach the server — check your connection"))
 	}
 	return err
 }

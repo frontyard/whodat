@@ -6,7 +6,7 @@ import QtQuick.Controls.Material
 // StarredDialog lists a chat's starred messages; tapping jumps to the row.
 Dialog {
     id: dlg
-    title: "Starred messages"
+    title: qsTr("Starred messages")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -34,7 +34,7 @@ Dialog {
 
         Label {
             visible: list.count === 0
-            text: "No starred messages"
+            text: qsTr("No starred messages")
             color: Theme.onSurfaceVariant
             Layout.alignment: Qt.AlignHCenter
             Layout.topMargin: 20

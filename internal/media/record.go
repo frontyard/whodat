@@ -3,6 +3,7 @@ package media
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"math"
 	"sync"
@@ -10,6 +11,8 @@ import (
 
 	"github.com/go-gst/go-gst/gst"
 	"github.com/go-gst/go-gst/gst/app"
+
+	"github.com/frontyard/whodat/internal/i18n"
 )
 
 // Recorder captures raw 16 kHz mono PCM for a voice note, then encodes
@@ -127,7 +130,7 @@ func (r *Recorder) Stop() (*VoiceNote, error) {
 		pcm := append([]byte(nil), r.pcm.Bytes()...)
 		r.mu.Unlock()
 		if len(pcm) == 0 {
-			r.err = fmt.Errorf("empty recording")
+			r.err = errors.New(i18n.T("empty recording"))
 			return
 		}
 		ogg, err := encodeOpus(pcm)
@@ -202,7 +205,7 @@ func encodeOpus(pcm []byte) ([]byte, error) {
 	<-done
 	p.SetState(gst.StateNull)
 	if out.Len() == 0 {
-		return nil, fmt.Errorf("opus encode produced no data")
+		return nil, errors.New(i18n.T("voice encoding failed"))
 	}
 	return out.Bytes(), nil
 }

@@ -23,6 +23,7 @@ import (
 	"github.com/frontyard/whodat/internal/call"
 	"github.com/frontyard/whodat/internal/config"
 	"github.com/frontyard/whodat/internal/core"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/media"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
@@ -52,13 +53,14 @@ type Host struct {
 	recMu       sync.Mutex      // guards recorder — start/stop ops run on bridge goroutines
 	tray        *qt.QSystemTrayIcon
 	trayMenu    *qt.QMenu
-	trayIconDK  *qt.QIcon    // white glyph, for dark panels
-	trayIconLT  *qt.QIcon    // black glyph, for light panels
-	trayBadgeDK *qt.QIcon    // white glyph + unread dot
-	trayBadgeLT *qt.QIcon    // black glyph + unread dot
-	trayUnread  int          // last published unread total (Qt thread only)
-	pendingChat store.PeerID // chat a notification click should open
-	appIconPath string       // bundled app icon file — fallback notification icon
+	translator  *qt.QTranslator // keeps the i18n catalog live (GC pinning)
+	trayIconDK  *qt.QIcon       // white glyph, for dark panels
+	trayIconLT  *qt.QIcon       // black glyph, for light panels
+	trayBadgeDK *qt.QIcon       // white glyph + unread dot
+	trayBadgeLT *qt.QIcon       // black glyph + unread dot
+	trayUnread  int             // last published unread total (Qt thread only)
+	pendingChat store.PeerID    // chat a notification click should open
+	appIconPath string          // bundled app icon file — fallback notification icon
 
 	// notifChat maps daemon-issued notification ids to chats for
 	// click-to-open. notifMu guards it — ActionInvoked arrives on a godbus
@@ -153,6 +155,7 @@ func NewHost(app *core.App) *Host {
 		appIconPath: iconPath,
 		notifChat:   map[uint32]store.PeerID{},
 		trayIconDK:  trayIconDK, trayIconLT: trayIconLT, trayBadgeDK: trayBadgeDK, trayBadgeLT: trayBadgeLT}
+	h.setupI18n()
 	h.cmd = qml.NewQQmlPropertyMap()
 	h.reply = qml.NewQQmlPropertyMap()
 	h.state = qml.NewQQmlPropertyMap()
@@ -524,7 +527,8 @@ func (h *Host) sameChat(a, b store.PeerID) bool {
 
 // errNoSvc reports an op that arrived after every account was removed —
 // SvcFor returns nil only in that window, and ops must not dereference it.
-var errNoSvc = errors.New("no account for chat")
+// Built per call so i18n.T sees the active catalog.
+func errNoSvc() error { return errors.New(i18n.T("no account for chat")) }
 
 // svcForChat resolves the service owning a chat-scoped id, or errNoSvc
 // when no account is registered anymore.
@@ -532,7 +536,7 @@ func svcForChat(app *core.App, jid store.PeerID) (protocol.Service, error) {
 	if s := app.SvcFor(jid); s != nil {
 		return s, nil
 	}
-	return nil, errNoSvc
+	return nil, errNoSvc()
 }
 
 // chatRowJID maps a bus event's chat id onto the stored chat row's key.
@@ -615,17 +619,22 @@ func (h *Host) onTyping(t *protocol.TypingInfo) {
 		}
 		return
 	}
-	who := ""
+	var label string
 	if h.msgs.isGroup && t.SenderJID != "" {
-		who = h.app.ContactName(context.Background(), t.SenderJID) + " is "
-	}
-	label := "typing…"
-	if t.Recording {
-		label = "recording audio…"
+		name := h.app.ContactName(context.Background(), t.SenderJID)
+		if t.Recording {
+			label = i18n.T("%1 is recording audio…", name)
+		} else {
+			label = i18n.T("%1 is typing…", name)
+		}
+	} else if t.Recording {
+		label = i18n.T("recording audio…")
+	} else {
+		label = i18n.T("typing…")
 	}
 	h.typSeq++
 	h.typSender = t.SenderJID
-	h.setState("chatTyping", who+label)
+	h.setState("chatTyping", label)
 	// Peers don't reliably send "stopped typing" (offline, killed app,
 	// dropped stanza) — expire a stale indicator unless a fresh
 	// composing/paused event supersedes this one first.
@@ -654,9 +663,9 @@ func (h *Host) onPresence(t *protocol.TypingInfo) {
 	}
 	switch {
 	case t.Online:
-		h.setState("chatSub", "online")
+		h.setState("chatSub", i18n.T("online"))
 	case !t.LastSeen.IsZero():
-		h.setState("chatSub", "last seen "+fmtLastSeen(t.LastSeen))
+		h.setState("chatSub", i18n.T("last seen %1", fmtLastSeen(t.LastSeen)))
 	default:
 		h.setState("chatSub", h.subBase)
 	}
@@ -669,11 +678,11 @@ func fmtLastSeen(t time.Time) string {
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, now.Location())
 	switch {
 	case day.Equal(today):
-		return "today at " + t.Format("15:04")
+		return i18n.T("today at %1", t.Format("15:04"))
 	case day.Equal(today.AddDate(0, 0, -1)):
-		return "yesterday at " + t.Format("15:04")
+		return i18n.T("yesterday at %1", t.Format("15:04"))
 	default:
-		return t.Format("02 Jan 2006 at 15:04")
+		return i18n.T("%1 at %2", t.Format("02 Jan 2006"), t.Format("15:04"))
 	}
 }
 
@@ -685,7 +694,7 @@ func (h *Host) renderQR(acct, code string) {
 	go func() {
 		png, err := qrcode.Encode(code, qrcode.Medium, 512)
 		if err != nil {
-			mt(func() { h.setState("loginStatus", "Could not render QR code") })
+			mt(func() { h.setState("loginStatus", i18n.T("Could not render QR code")) })
 			return
 		}
 		dir := config.CacheDir()
@@ -693,10 +702,10 @@ func (h *Host) renderQR(acct, code string) {
 		if err := os.WriteFile(path, png, 0o600); err != nil {
 			return
 		}
-		hint := "Scan the QR code with your messaging app."
+		hint := i18n.T("Scan the QR code with your messaging app.")
 		if svc := h.app.Svc(acct); svc != nil {
 			if b, ok := protocol.BackendOf(svc.Protocol()); ok && b.ScanHint != "" {
-				hint = b.ScanHint
+				hint = i18n.T(b.ScanHint)
 			}
 		}
 		mt(func() {

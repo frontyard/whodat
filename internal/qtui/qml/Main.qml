@@ -60,12 +60,12 @@ ApplicationWindow {
         z: 50
 
         StatusPill {
-            label: "Connecting…"
+            label: qsTr("Connecting…")
             iconSource: Qt.resolvedUrl("icons/cloud_off.svg")
             active: App.paired && App.connState !== "online" && App.connState !== "boot"
         }
         StatusPill {
-            label: "Syncing messages…"
+            label: qsTr("Syncing messages…")
             iconSource: Qt.resolvedUrl("icons/sync.svg")
             container: Theme.secondaryContainer
             onContainer: Theme.onSecondaryContainer

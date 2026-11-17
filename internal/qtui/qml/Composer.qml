@@ -134,7 +134,7 @@ Item {
         quotedId = id;
         var t = (text || "").replace(/\n/g, " ");
         if (t.length > 80) t = t.slice(0, 80) + "…";
-        quoteLabel = (sender || "Message") + ": " + t;
+        quoteLabel = (sender || qsTr("Message")) + ": " + t;
         input.forceActiveFocus();
     }
 
@@ -170,7 +170,7 @@ Item {
                 anchors.rightMargin: 4
 
                 Label {
-                    text: "Recording " + fmtTime(comp.recSeconds) + " — stop sends, cancel discards"
+                    text: qsTr("Recording %1 — stop sends, cancel discards").arg(fmtTime(comp.recSeconds))
                     color: Theme.onErrorContainer
                     font.pixelSize: 12
                     Layout.fillWidth: true
@@ -194,8 +194,8 @@ Item {
                 Rectangle { width: 3; Layout.fillHeight: true; Layout.topMargin: 6; Layout.bottomMargin: 6; color: Theme.primary }
                 Label {
                     text: comp.editId !== ""
-                          ? "Editing message"
-                          : "Replying to " + comp.quoteLabel
+                          ? qsTr("Editing message")
+                          : qsTr("Replying to %1").arg(comp.quoteLabel)
                     elide: Text.ElideRight
                     color: Theme.onSurfaceVariant
                     font.pixelSize: 12
@@ -246,11 +246,11 @@ Item {
                     WdMenu {
                         id: attachMenu
                         WdMenuItem {
-                            text: "Attach file…"
+                            text: qsTr("Attach file…")
                             onTriggered: fileDlg.open()
                         }
                         WdMenuItem {
-                            text: "Create poll…"
+                            text: qsTr("Create poll…")
                             visible: App.chatCapsPolls !== false
                             onTriggered: pollDlg.openFor()
                         }
@@ -275,7 +275,7 @@ Item {
                     // reads as a misaligned placeholder in a 40px pill.
                     Basic.TextArea {
                         id: input
-                        placeholderText: "Message"
+                        placeholderText: qsTr("Message")
                         wrapMode: TextArea.Wrap
                         color: Theme.onSurface
                         placeholderTextColor: Theme.onSurfaceVariant
@@ -448,7 +448,7 @@ Item {
 
     function startRecord() {
         Bridge.cmd("startRecord", {}, function(ok, d, e) {
-            if (!ok) { Bridge.cmd("notify", {msg: "Microphone unavailable"}); return; }
+            if (!ok) { Bridge.cmd("notify", {msg: qsTr("Microphone unavailable")}); return; }
             comp.recSeconds = 0;
             comp.recording = true;
         });
@@ -478,14 +478,14 @@ Item {
         if (comp.editId !== "") {
             var id = comp.editId;
             Bridge.cmd("sendEdit", {jid: App.chatJID, msgId: id, text: t}, function(ok, d, e) {
-                if (!ok) Bridge.cmd("notify", {msg: "Edit failed: " + e});
+                if (!ok) Bridge.cmd("notify", {msg: qsTr("Edit failed: %1").arg(e)});
             });
         } else {
             var ms = [];
             for (var i = 0; i < comp._mentions.length; i++)
                 if (t.indexOf(comp._mentions[i].token) >= 0) ms.push(comp._mentions[i]);
             Bridge.cmd("sendMessage", {jid: App.chatJID, text: t, quotedId: comp.quotedId, mentions: ms}, function(ok, d, e) {
-                if (!ok) Bridge.cmd("notify", {msg: "Send failed: " + e});
+                if (!ok) Bridge.cmd("notify", {msg: qsTr("Send failed: %1").arg(e)});
             });
         }
         input.text = "";

@@ -34,11 +34,11 @@ Rectangle {
 
         Repeater {
             model: [
-                { act: "react",   icon: "sentiment_satisfied", tip: "React" },
-                { act: "reply",   icon: "reply",               tip: "Reply" },
-                { act: "forward", icon: "forward",             tip: "Forward" },
-                { act: "edit",    icon: "edit",                tip: "Edit" },
-                { act: "more",    icon: "more_vert",           tip: "More" }
+                { act: "react",   icon: "sentiment_satisfied", tip: qsTr("React") },
+                { act: "reply",   icon: "reply",               tip: qsTr("Reply") },
+                { act: "forward", icon: "forward",             tip: qsTr("Forward") },
+                { act: "edit",    icon: "edit",                tip: qsTr("Edit") },
+                { act: "more",    icon: "more_vert",           tip: qsTr("More") }
             ]
             delegate: Item {
                 required property var modelData

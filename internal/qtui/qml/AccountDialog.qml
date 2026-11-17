@@ -7,7 +7,7 @@ import QtQuick.Controls.Material
 // settings, personal QR code.
 Dialog {
     id: dlg
-    title: "Account"
+    title: qsTr("Account")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -16,7 +16,7 @@ Dialog {
     standardButtons: Dialog.Close
 
     readonly property var privacyNames: ["all", "contacts", "contact_blacklist", "match_last_seen", "known", "none"]
-    readonly property var privacyLabels: ["Everyone", "My contacts", "My contacts except…", "Same as last seen", "Contacts and saved", "Nobody"]
+    readonly property var privacyLabels: [qsTr("Everyone"), qsTr("My contacts"), qsTr("My contacts except…"), qsTr("Same as last seen"), qsTr("Contacts and saved"), qsTr("Nobody")]
 
     property string acct: ""
     // Driven by the account's Caps.Privacy — the privacy section renders
@@ -42,7 +42,7 @@ Dialog {
                 qrImg.source = Bridge.fileUrl(data.path);
                 qrLoading.visible = false;
             } else {
-                qrLoading.text = "No profile link";
+                qrLoading.text = qsTr("No profile link");
             }
         });
     }
@@ -63,7 +63,7 @@ Dialog {
             model: dlg.privacyLabels
             Layout.preferredWidth: 200
             onActivated: Bridge.cmd("privacySet", {acct: dlg.acct, name: pname, value: dlg.privacyNames[currentIndex]}, function(ok, d, e) {
-                if (!ok) Bridge.cmd("notify", {msg: "Privacy change failed: " + e});
+                if (!ok) Bridge.cmd("notify", {msg: qsTr("Privacy change failed: %1").arg(e)});
             })
         }
     }
@@ -77,7 +77,7 @@ Dialog {
             width: parent.width
             spacing: 6
 
-            Label { text: "Linked devices"; font.bold: true; color: Theme.onSurface }
+            Label { text: qsTr("Linked devices"); font.bold: true; color: Theme.onSurface }
             Rectangle {
                 Layout.fillWidth: true
                 implicitHeight: Math.min(140, devList.contentHeight + 8)
@@ -99,14 +99,14 @@ Dialog {
                 }
             }
 
-            Label { text: "Privacy"; font.bold: true; color: Theme.onSurface; Layout.topMargin: 8; visible: dlg.hasPrivacy }
-            PrivacyRow { id: lastSeenRow; caption: "Last seen"; pname: "lastseen"; visible: dlg.hasPrivacy }
-            PrivacyRow { id: profileRow; caption: "Profile photo"; pname: "profile"; visible: dlg.hasPrivacy }
-            PrivacyRow { id: aboutRow; caption: "About"; pname: "status"; visible: dlg.hasPrivacy }
-            PrivacyRow { id: receiptsRow; caption: "Read receipts"; pname: "readreceipts"; visible: dlg.hasPrivacy }
-            PrivacyRow { id: groupAddRow; caption: "Group invites"; pname: "groupadd"; visible: dlg.hasPrivacy }
+            Label { text: qsTr("Privacy"); font.bold: true; color: Theme.onSurface; Layout.topMargin: 8; visible: dlg.hasPrivacy }
+            PrivacyRow { id: lastSeenRow; caption: qsTr("Last seen"); pname: "lastseen"; visible: dlg.hasPrivacy }
+            PrivacyRow { id: profileRow; caption: qsTr("Profile photo"); pname: "profile"; visible: dlg.hasPrivacy }
+            PrivacyRow { id: aboutRow; caption: qsTr("About"); pname: "status"; visible: dlg.hasPrivacy }
+            PrivacyRow { id: receiptsRow; caption: qsTr("Read receipts"); pname: "readreceipts"; visible: dlg.hasPrivacy }
+            PrivacyRow { id: groupAddRow; caption: qsTr("Group invites"); pname: "groupadd"; visible: dlg.hasPrivacy }
 
-            Label { text: "My QR code"; font.bold: true; color: Theme.onSurface; Layout.topMargin: 8 }
+            Label { text: qsTr("My QR code"); font.bold: true; color: Theme.onSurface; Layout.topMargin: 8 }
             Image {
                 id: qrImg
                 Layout.alignment: Qt.AlignHCenter
@@ -118,7 +118,7 @@ Dialog {
             Label {
                 id: qrLoading
                 visible: qrImg.source == ""
-                text: "Loading…"
+                text: qsTr("Loading…")
                 color: Theme.onSurfaceVariant
                 Layout.alignment: Qt.AlignHCenter
             }

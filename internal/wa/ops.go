@@ -14,6 +14,7 @@ import (
 	"github.com/polymorfa/hypermeow/types"
 	"github.com/polymorfa/hypermeow/types/events"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	appstore "github.com/frontyard/whodat/internal/store"
 )
@@ -200,7 +201,7 @@ func (s *Service) SendPoll(ctx context.Context, chatJID appstore.PeerID, questio
 		return nil, err
 	}
 	if len(options) < 2 {
-		return nil, errors.New("poll needs at least two options")
+		return nil, errors.New(i18n.T("poll needs at least two options"))
 	}
 	wm := s.Client().BuildPollCreation(question, options, max)
 	resp, err := s.Client().SendMessage(ctx, jid, wm)
@@ -283,7 +284,7 @@ func (s *Service) CreateGroup(ctx context.Context, subject string, participants 
 		jids = append(jids, j)
 	}
 	if len(jids) == 0 {
-		return nil, errors.New("no valid participants")
+		return nil, errors.New(i18n.T("no valid participants"))
 	}
 	gi, err := s.Client().CreateGroup(ctx, whatsmeow.ReqCreateGroup{Name: subject, Participants: jids})
 	if err != nil {
@@ -308,7 +309,7 @@ func (s *Service) LeaveGroup(ctx context.Context, jidStr appstore.PeerID) error 
 	if err := s.Client().LeaveGroup(ctx, jid); err != nil {
 		return err
 	}
-	s.applyMembership(ctx, jidStr, true, "You left")
+	s.applyMembership(ctx, jidStr, true, i18n.T("You left"))
 	return nil
 }
 
@@ -372,7 +373,7 @@ func (s *Service) UpdateGroupParticipants(ctx context.Context, jidStr appstore.P
 		}
 	}
 	if len(js) == 0 {
-		return errors.New("no valid participants")
+		return errors.New(i18n.T("no valid participants"))
 	}
 	var act whatsmeow.ParticipantChange
 	switch action {
@@ -385,7 +386,7 @@ func (s *Service) UpdateGroupParticipants(ctx context.Context, jidStr appstore.P
 	case protocol.ParticipantDemote:
 		act = whatsmeow.ParticipantChangeDemote
 	default:
-		return fmt.Errorf("unknown participant action %d", action)
+		return errors.New(i18n.T("unknown participant action %1", int(action)))
 	}
 	_, err = s.Client().UpdateGroupParticipants(ctx, jid, js, act)
 	return err
@@ -396,7 +397,7 @@ func (s *Service) UpdateGroupParticipants(ctx context.Context, jidStr appstore.P
 // LinkedDevices lists JIDs of devices on the account.
 func (s *Service) LinkedDevices(ctx context.Context) ([]types.JID, error) {
 	if !s.Paired() {
-		return nil, errors.New("not paired")
+		return nil, errors.New(i18n.T("not paired"))
 	}
 	return s.Client().GetUserDevices(ctx, []types.JID{s.Client().Store.ID.ToNonAD()})
 }
@@ -456,7 +457,7 @@ func (s *Service) VerifyCode(ctx context.Context, chatID appstore.PeerID) (strin
 		return "", err
 	}
 	if codes == nil {
-		return "", errors.New("empty codes")
+		return "", errors.New(i18n.T("empty codes"))
 	}
 	return codes.NumericCode, nil
 }

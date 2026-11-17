@@ -6,6 +6,7 @@ import (
 	"errors"
 	"time"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -29,7 +30,7 @@ func opAuthStart(h *Host, args json.RawMessage) (any, error) {
 		Proto string `json:"proto"`
 	}
 	if err := json.Unmarshal(args, &a); err != nil || a.Proto == "" {
-		return nil, errors.New("proto required")
+		return nil, errors.New(i18n.T("proto required"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -68,11 +69,11 @@ func opAuthSubmit(h *Host, args json.RawMessage) (any, error) {
 		Value string `json:"value"`
 	}
 	if err := json.Unmarshal(args, &a); err != nil || a.Acct == "" {
-		return nil, errors.New("acct required")
+		return nil, errors.New(i18n.T("acct required"))
 	}
 	svc := h.app.Svc(a.Acct)
 	if svc == nil {
-		return nil, errors.New("no such account")
+		return nil, errors.New(i18n.T("no such account"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	defer cancel()
@@ -90,14 +91,14 @@ func opAuthCancel(h *Host, args json.RawMessage) (any, error) {
 		Acct string `json:"acct"`
 	}
 	if err := json.Unmarshal(args, &a); err != nil || a.Acct == "" {
-		return nil, errors.New("acct required")
+		return nil, errors.New(i18n.T("acct required"))
 	}
 	svc := h.app.Svc(a.Acct)
 	if svc == nil {
-		return nil, errors.New("no such account")
+		return nil, errors.New(i18n.T("no such account"))
 	}
 	if svc.Paired() {
-		return nil, errors.New("account is paired — use logoutAccount")
+		return nil, errors.New(i18n.T("account is paired — use logoutAccount"))
 	}
 	h.app.RemoveAccount(context.Background(), a.Acct)
 	svc.Disconnect()
@@ -119,11 +120,11 @@ func opLogoutAccount(h *Host, args json.RawMessage) (any, error) {
 		Acct string `json:"acct"`
 	}
 	if err := json.Unmarshal(args, &a); err != nil || a.Acct == "" {
-		return nil, errors.New("acct required")
+		return nil, errors.New(i18n.T("acct required"))
 	}
 	svc := h.app.Svc(a.Acct)
 	if svc == nil {
-		return nil, errors.New("no such account")
+		return nil, errors.New(i18n.T("no such account"))
 	}
 	h.app.RemoveAccount(context.Background(), a.Acct)
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)

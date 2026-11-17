@@ -8,6 +8,7 @@ import (
 	"github.com/polymorfa/hypermeow/types"
 	"github.com/suhwr/meowcaller"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	appstore "github.com/frontyard/whodat/internal/store"
 	"github.com/frontyard/whodat/internal/wa"
@@ -161,18 +162,18 @@ func (w *waConn) emitOri(turns int) {
 func phaseName(p meowcaller.CallPhase) string {
 	switch p {
 	case meowcaller.CallPhaseCalling:
-		return "Calling…"
+		return i18n.T("Calling…")
 	case meowcaller.CallPhaseRinging:
-		return "Ringing…"
+		return i18n.T("Ringing…")
 	case meowcaller.CallPhaseConnecting:
-		return "Connecting…"
+		return i18n.T("Connecting…")
 	case meowcaller.CallPhaseActive:
-		return "In call"
+		return i18n.T("In call")
 	case meowcaller.CallPhaseWaitingRoom:
-		return "Waiting room"
+		return i18n.T("Waiting room")
 	case meowcaller.CallPhaseEnded:
-		return "Call ended"
+		return i18n.T("Call ended")
 	default:
-		return "Connecting…"
+		return i18n.T("Connecting…")
 	}
 }

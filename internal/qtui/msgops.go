@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/frontyard/whodat/internal/core"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -53,7 +54,7 @@ func (h *Host) opEmojiData(_ *Host, _ json.RawMessage) (any, error) {
 	}
 	var cats []cat
 	for _, c := range core.EmojiCats {
-		cats = append(cats, cat{Name: c.Name, Set: c.Set})
+		cats = append(cats, cat{Name: i18n.T(c.Name), Set: c.Set})
 	}
 	names := map[string]string{}
 	for _, c := range core.EmojiCats {
@@ -86,7 +87,7 @@ func (h *Host) msg(ctx context.Context, jid store.PeerID, id string) (*store.Mes
 		return nil, err
 	}
 	if m == nil {
-		return nil, fmt.Errorf("message %s not found", id)
+		return nil, fmt.Errorf("%s", i18n.T("message %1 not found", id))
 	}
 	return m, nil
 }
@@ -322,7 +323,7 @@ func (h *Host) forwardConvert(ctx context.Context, src, dst protocol.Service, to
 		fallthrough // poll with no options → send its question as text
 	default:
 		if strings.TrimSpace(m.Text) == "" {
-			return fmt.Errorf("nothing to forward")
+			return fmt.Errorf("%s", i18n.T("nothing to forward"))
 		}
 		sent, err = dst.SendText(ctx, toJID, m.Text, nil, nil)
 	}
@@ -332,7 +333,7 @@ func (h *Host) forwardConvert(ctx context.Context, src, dst protocol.Service, to
 	if sent == nil {
 		// media fell through to text, or a send path returned no row
 		if strings.TrimSpace(m.Text) == "" {
-			return fmt.Errorf("nothing to forward")
+			return fmt.Errorf("%s", i18n.T("nothing to forward"))
 		}
 		if sent, err = dst.SendText(ctx, toJID, m.Text, nil, nil); err != nil {
 			return err
@@ -367,7 +368,7 @@ func (h *Host) opSendPoll(_ *Host, args json.RawMessage) (any, error) {
 		}
 	}
 	if len(opts) < 2 {
-		return nil, fmt.Errorf("a poll needs at least two options")
+		return nil, fmt.Errorf("%s", i18n.T("a poll needs at least two options"))
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()

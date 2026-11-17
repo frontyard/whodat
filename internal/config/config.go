@@ -25,6 +25,7 @@ type Prefs struct {
 	AutoDownloadMax int64  `json:"auto_download_max_bytes"` // auto-download media below this size
 	ShowGroupCalls  bool   `json:"show_group_calls"`        // experimental
 	ChatStyle       string `json:"chat_style"`              // bubbles|flat
+	Language        string `json:"language"`                // ""|system, or a catalog code (de, pt_BR…)
 }
 
 // Config holds user-facing preferences persisted as JSON. Field access is

@@ -14,6 +14,7 @@ import (
 
 	"github.com/go-gst/go-gst/gst"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	appstore "github.com/frontyard/whodat/internal/store"
 )
@@ -100,8 +101,9 @@ func (m *Manager) Active() *Session {
 	return m.active
 }
 
-// errBusy is returned when a call is already in progress.
-var errBusy = errors.New("a call is already in progress")
+// errBusy is returned when a call is already in progress — built per call
+// so i18n.T sees the active catalog (a package-level New bakes English).
+func errBusy() error { return errors.New(i18n.T("a call is already in progress")) }
 
 // hasLiveCall reports whether an active session hasn't ended yet.
 func (m *Manager) hasLiveCall() bool {
@@ -125,11 +127,11 @@ func (m *Manager) providerFor(id appstore.PeerID) Provider {
 // Call starts a 1:1 call to a phone number or chat-id string.
 func (m *Manager) Call(ctx context.Context, target appstore.PeerID, video bool) (*Session, error) {
 	if m.hasLiveCall() {
-		return nil, errBusy
+		return nil, errBusy()
 	}
 	p := m.providerFor(target)
 	if p == nil {
-		return nil, fmt.Errorf("no call provider for %q", target)
+		return nil, errors.New(i18n.T("no call provider for %1", target.String()))
 	}
 	s, err := p.Place(ctx, target, video)
 	if err != nil {
@@ -143,11 +145,11 @@ func (m *Manager) Call(ctx context.Context, target appstore.PeerID, video bool) 
 // GroupCallByID starts a group-bound call.
 func (m *Manager) GroupCallByID(ctx context.Context, groupID appstore.PeerID) (*Session, error) {
 	if m.hasLiveCall() {
-		return nil, errBusy
+		return nil, errBusy()
 	}
 	p := m.providerFor(groupID)
 	if p == nil {
-		return nil, fmt.Errorf("no call provider for %q", groupID)
+		return nil, errors.New(i18n.T("no call provider for %1", groupID.String()))
 	}
 	s, err := p.PlaceGroupByID(ctx, groupID)
 	if err != nil {
@@ -161,7 +163,7 @@ func (m *Manager) GroupCallByID(ctx context.Context, groupID appstore.PeerID) (*
 // GroupCall rings the given targets as one call.
 func (m *Manager) GroupCall(ctx context.Context, targets ...appstore.PeerID) (*Session, error) {
 	if m.hasLiveCall() {
-		return nil, errBusy
+		return nil, errBusy()
 	}
 	m.mu.Lock()
 	deflt := m.deflt
@@ -174,7 +176,7 @@ func (m *Manager) GroupCall(ctx context.Context, targets ...appstore.PeerID) (*S
 	}
 	p := m.providerFor(route)
 	if p == nil {
-		return nil, fmt.Errorf("no call provider")
+		return nil, errors.New(i18n.T("no call provider"))
 	}
 	s, err := p.PlaceGroup(ctx, targets...)
 	if err != nil {
@@ -538,18 +540,24 @@ func (s *Session) writeCallLog() {
 	if answered {
 		dur = int(time.Since(s.answeredAt).Seconds())
 	}
-	label, mime := "Voice", "call/audio"
+	mime := "call/audio"
 	if s.hadVideo.Load() {
-		label, mime = "Video", "call/video"
+		mime = "call/video"
 	}
 	var text string
 	switch {
+	case !answered && s.Incoming && s.hadVideo.Load():
+		text = i18n.T("Missed video call")
 	case !answered && s.Incoming:
-		text = "Missed " + strings.ToLower(label) + " call"
+		text = i18n.T("Missed voice call")
 	case !answered:
-		text = "No answer"
+		text = i18n.T("No answer")
 	default:
-		text = label + " call"
+		if s.hadVideo.Load() {
+			text = i18n.T("Video call")
+		} else {
+			text = i18n.T("Voice call")
+		}
 		if dur > 0 {
 			text += fmt.Sprintf(" · %d:%02d", dur/60, dur%60)
 		}

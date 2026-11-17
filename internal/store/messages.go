@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/frontyard/whodat/internal/i18n"
 )
 
 // MsgType classifies how a message row is rendered.
@@ -31,29 +33,29 @@ const (
 func NotifyFallback(t MsgType) string {
 	switch t {
 	case TImage:
-		return "Photo"
+		return i18n.T("Photo")
 	case TVideo:
-		return "Video"
+		return i18n.T("Video")
 	case TAudio:
-		return "Audio"
+		return i18n.T("Audio")
 	case TPTT:
-		return "Voice message"
+		return i18n.T("Voice message")
 	case TDocument:
-		return "Document"
+		return i18n.T("Document")
 	case TSticker:
-		return "Sticker"
+		return i18n.T("Sticker")
 	case TLocation:
-		return "Location"
+		return i18n.T("Location")
 	case TContact:
-		return "Contact"
+		return i18n.T("Contact")
 	case TCall:
-		return "Call"
+		return i18n.T("Call")
 	case TPoll:
-		return "Poll"
+		return i18n.T("Poll")
 	case TRevoked:
-		return "Message deleted"
+		return i18n.T("Message deleted")
 	default:
-		return "Message"
+		return i18n.T("Message")
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/frontyard/whodat/internal/core"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -67,7 +68,7 @@ func (h *Host) opOpenChat(_ *Host, args json.RawMessage) (any, error) {
 		}
 		sub := h.app.NumberOf(ctx, c.JID)
 		if isGroup {
-			sub = "Group"
+			sub = i18n.T("Group")
 		}
 		e2e := h.e2eState(a.JID)
 		mt(func() {

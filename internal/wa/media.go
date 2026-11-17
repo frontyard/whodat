@@ -2,12 +2,13 @@ package wa
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"path/filepath"
 
 	"github.com/polymorfa/hypermeow/proto/waE2E"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/media"
 	appstore "github.com/frontyard/whodat/internal/store"
 )
@@ -22,11 +23,11 @@ func (s *Service) FetchMedia(ctx context.Context, m *appstore.Message) (string, 
 		}
 	}
 	if len(m.Proto) == 0 {
-		return "", fmt.Errorf("no proto payload for download")
+		return "", errors.New(i18n.T("no proto payload for download"))
 	}
 	wm := unmarshalProto(m.Proto)
 	if wm == nil || downloadable(wm) == nil {
-		return "", fmt.Errorf("message carries no downloadable media")
+		return "", errors.New(i18n.T("message carries no downloadable media"))
 	}
 	data, err := s.Client().DownloadAny(ctx, wm)
 	if err != nil {
@@ -62,11 +63,11 @@ func (s *Service) FetchMediaThumb(ctx context.Context, m *appstore.Message) (str
 		}
 	}
 	if len(m.Proto) == 0 {
-		return "", fmt.Errorf("no proto payload for thumbnail")
+		return "", errors.New(i18n.T("no proto payload for thumbnail"))
 	}
 	wm := unmarshalProto(m.Proto)
 	if wm == nil {
-		return "", fmt.Errorf("message carries no proto")
+		return "", errors.New(i18n.T("message carries no proto"))
 	}
 	var thumb []byte
 	switch {
@@ -78,7 +79,7 @@ func (s *Service) FetchMediaThumb(ctx context.Context, m *appstore.Message) (str
 		thumb = wm.GetDocumentMessage().GetJPEGThumbnail()
 	}
 	if len(thumb) == 0 {
-		return "", fmt.Errorf("message carries no inline thumbnail")
+		return "", errors.New(i18n.T("message carries no inline thumbnail"))
 	}
 	path, err := media.StageBytes(m.ChatJID.Acct(), thumb, ".jpg")
 	if err != nil {

@@ -14,6 +14,7 @@ import (
 	"github.com/mappu/miqt/qt6/multimedia"
 
 	"github.com/frontyard/whodat/internal/call"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 )
 
@@ -68,7 +69,7 @@ func (h *Host) opStartCall(_ *Host, args json.RawMessage) (any, error) {
 		}
 		if err != nil {
 			log.Printf("call: start failed: %v", err)
-			h.Toast("Call failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Call failed: %1", protocol.UserErr(err).Error()))
 			return
 		}
 		mt(func() { h.presentOutgoing(s) })
@@ -99,7 +100,7 @@ func (h *Host) presentIncoming(s *call.Session) {
 	name := h.app.ChatName(context.Background(), s.Peer())
 	h.resetCallState()
 	h.setState("callName", name)
-	h.setState("callPhase", "Incoming call")
+	h.setState("callPhase", i18n.T("Incoming call"))
 	h.setState("callIncoming", true)
 	h.setState("callVideo", s.Video)
 	h.setState("callActive", true)
@@ -115,7 +116,7 @@ func (h *Host) presentOutgoing(s *call.Session) {
 	name := h.app.ChatName(context.Background(), s.Peer())
 	h.resetCallState()
 	h.setState("callName", name)
-	h.setState("callPhase", "Calling…")
+	h.setState("callPhase", i18n.T("Calling…"))
 	h.setState("callVideo", s.Video)
 	h.setState("callActive", true)
 }
@@ -138,13 +139,13 @@ func (h *Host) wireSession(s *call.Session) {
 	s.OnPeerAccept = func() {
 		mt(func() {
 			h.setState("callIncoming", false)
-			h.setState("callPhase", "In call")
+			h.setState("callPhase", i18n.T("In call"))
 		})
 	}
 	s.OnEnd = func(reason string) {
 		mt(func() {
 			h.callEnded.Store(true)
-			h.setState("callPhase", "Call ended")
+			h.setState("callPhase", i18n.T("Call ended"))
 			h.setState("callEndedReason", reason)
 			h.setState("callEnded", true)
 			// Clear video flags so the dialog can tear down the frames.
@@ -185,7 +186,7 @@ func (h *Host) wireSession(s *call.Session) {
 	if s.Ended() {
 		mt(func() {
 			h.callEnded.Store(true)
-			h.setState("callPhase", "Call ended")
+			h.setState("callPhase", i18n.T("Call ended"))
 			h.setState("callEnded", true)
 		})
 	}
@@ -214,7 +215,7 @@ func (h *Host) opAnswerCall(_ *Host, _ json.RawMessage) (any, error) {
 	}
 	go func() {
 		if err := s.Answer(); err != nil {
-			h.Toast("Answer failed: " + protocol.UserErr(err).Error())
+			h.Toast(i18n.T("Answer failed: %1", protocol.UserErr(err).Error()))
 			mt(func() { h.setState("callActive", false) })
 		}
 	}()
@@ -271,7 +272,7 @@ func (h *Host) opVideoCall(_ *Host, args json.RawMessage) (any, error) {
 	go func() {
 		if err := s.EnableVideo(a.On); err != nil {
 			log.Printf("call: EnableVideo(%v): %v", a.On, err)
-			h.Toast("Camera failed")
+			h.Toast(i18n.T("Camera failed"))
 			mt(func() { h.setState("callVideo", !a.On) })
 		}
 	}()

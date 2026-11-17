@@ -13,6 +13,8 @@ import (
 
 	"github.com/go-gst/go-gst/gst"
 	"github.com/go-gst/go-gst/gst/app"
+
+	"github.com/frontyard/whodat/internal/i18n"
 )
 
 // pullPipe wraps a pipeline ending in appsink; a goroutine pulls samples and
@@ -229,7 +231,7 @@ func startCameraPipe(codec string) (cam *pullPipe, preview *pullPipe, aus <-chan
 			lastErr = err
 		}
 	}
-	return nil, nil, nil, fmt.Errorf("%w: %v", ErrNoCamera, lastErr)
+	return nil, nil, nil, fmt.Errorf("%s: %v", i18n.T("no camera device available"), lastErr)
 }
 
 // tryCameraSource builds one candidate pipeline and proves it by waiting for

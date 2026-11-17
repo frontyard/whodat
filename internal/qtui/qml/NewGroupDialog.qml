@@ -9,7 +9,7 @@ import QtQuick.Controls.Material
 // verbatim when it isn't in the store (WhatsApp digits).
 Dialog {
     id: dlg
-    title: "New group"
+    title: qsTr("New group")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -71,12 +71,12 @@ Dialog {
 
     footer: DialogButtonBox {
         WdButton {
-            text: "Cancel"
+            text: qsTr("Cancel")
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
             onClicked: dlg.close()
         }
         WdButton {
-            text: "Create"
+            text: qsTr("Create")
             enabled: gname.text.trim() !== "" && dlg.picked.length > 0
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             onClicked: {
@@ -87,7 +87,7 @@ Dialog {
                         if (ok && data.jid) {
                             Bridge.cmd("openChat", {jid: data.jid});
                         } else {
-                            Bridge.cmd("notify", {msg: "Group failed: " + err});
+                            Bridge.cmd("notify", {msg: qsTr("Group failed: %1").arg(err)});
                         }
                     });
                 dlg.close();
@@ -116,7 +116,7 @@ Dialog {
         }
         TextField {
             id: gname
-            placeholderText: "Group name"
+            placeholderText: qsTr("Group name")
             Layout.fillWidth: true
             Layout.preferredHeight: 50
             // the floated label rises ~11px above the border — the margin
@@ -179,7 +179,7 @@ Dialog {
 
         TextField {
             id: search
-            placeholderText: "Add members — name, number or @username"
+            placeholderText: qsTr("Add members — name, number or @username")
             Layout.fillWidth: true
             Layout.preferredHeight: 50
             Layout.topMargin: 12
@@ -210,7 +210,7 @@ Dialog {
                 width: results.width
                 visible: search.text.trim() !== ""
                 height: visible ? implicitHeight : 0
-                text: "Add \u201C" + search.text.trim() + "\u201D"
+                text: qsTr("Add \u201C%1\u201D").arg(search.text.trim())
                 onClicked: dlg.addMember(search.text.trim(), search.text.trim())
             }
 

@@ -6,7 +6,7 @@ import QtQuick.Controls.Material
 // NewChatDialog finds a contact by name or phone number, or creates a group.
 Dialog {
     id: dlg
-    title: "New chat"
+    title: qsTr("New chat")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -60,7 +60,7 @@ Dialog {
 
         TextField {
             id: search
-            placeholderText: "Search contacts"
+            placeholderText: qsTr("Search contacts")
             Layout.fillWidth: true
             Layout.margins: 8
             Layout.preferredHeight: 50
@@ -71,14 +71,14 @@ Dialog {
 
         WdItemDelegate {
             Layout.fillWidth: true
-            text: "+ New group"
+            text: qsTr("+ New group")
             onClicked: { dlg.close(); dlg.openGroup(); }
         }
 
         Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.outlineVariant }
 
         Label {
-            text: "By phone, number or @username"
+            text: qsTr("By phone, number or @username")
             color: Theme.onSurfaceVariant
             font.pixelSize: 12
             Layout.leftMargin: 12
@@ -90,12 +90,12 @@ Dialog {
             Layout.topMargin: 12 // room for the field's floated label
             TextField {
                 id: phone
-                placeholderText: "+1 555 123 4567 or @name"
+                placeholderText: qsTr("+1 555 123 4567 or @name")
                 Layout.fillWidth: true
                 Layout.preferredHeight: 50
             }
             WdButton {
-                text: "Start"
+                text: qsTr("Start")
                 onClicked: startPhone()
             }
         }
@@ -131,7 +131,7 @@ Dialog {
                 Bridge.cmd("openChat", {jid: data.jid});
                 dlg.close();
             } else {
-                Bridge.cmd("notify", {msg: (data && data.err) ? data.err : "Not found: " + num});
+                Bridge.cmd("notify", {msg: (data && data.err) ? data.err : qsTr("Not found: %1").arg(num)});
             }
         });
     }

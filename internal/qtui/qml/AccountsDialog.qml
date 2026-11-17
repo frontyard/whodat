@@ -10,7 +10,7 @@ Dialog {
     id: dlg
     // The picker/auth stages get their own title — the dialog is the
     // account list only while it shows one.
-    title: pane.inFlow ? "Add account" : "Accounts"
+    title: pane.inFlow ? qsTr("Add account") : qsTr("Accounts")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -46,7 +46,7 @@ Dialog {
                 // Footer add-account action — hidden while the picker or
                 // an auth stage occupies the dialog (Back owns it then).
                 visible: !pane.inFlow
-                text: "Add account"
+                text: qsTr("Add account")
                 flat: true
                 Material.foreground: Material.accent
                 onClicked: pane.wantPicker = true
@@ -54,13 +54,13 @@ Dialog {
             Item { Layout.fillWidth: true }
             WdButton {
                 visible: pane.inFlow
-                text: "Back"
+                text: qsTr("Back")
                 flat: true
                 Material.foreground: Material.accent
                 onClicked: pane.goBack()
             }
             WdButton {
-                text: "Close"
+                text: qsTr("Close")
                 flat: true
                 Material.foreground: Material.accent
                 onClicked: dlg.close()

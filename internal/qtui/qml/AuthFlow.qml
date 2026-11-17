@@ -50,7 +50,7 @@ Item {
             Item { Layout.fillHeight: true }
             Label {
                 visible: flow.showHeading
-                text: "Add an account"
+                text: qsTr("Add an account")
                 font.pixelSize: 22
                 font.bold: true
                 color: Theme.onSurface
@@ -58,7 +58,7 @@ Item {
             }
             Label {
                 visible: flow.showHeading
-                text: "Link your WhatsApp account — you can add more accounts later from the Accounts menu."
+                text: qsTr("Link your WhatsApp account — you can add more accounts later from the Accounts menu.")
                 color: Theme.onSurfaceVariant
                 wrapMode: Text.Wrap
                 horizontalAlignment: Text.AlignHCenter
@@ -72,7 +72,7 @@ Item {
                     required property var modelData
                     text: modelData.canAdd === true
                           ? modelData.name
-                          : modelData.name + " — already linked"
+                          : qsTr("%1 — already linked").arg(modelData.name)
                     enabled: modelData.canAdd === true
                     Layout.fillWidth: true
                     Layout.leftMargin: 24
@@ -93,7 +93,7 @@ Item {
             }
             Label {
                 visible: protoList.count === 0
-                text: "Loading…"
+                text: qsTr("Loading…")
                 color: Theme.onSurfaceVariant
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -116,7 +116,7 @@ Item {
                 Layout.preferredWidth: stageCol.width
 
                 Label {
-                    text: App.loginStatus || "Waiting for a QR code…"
+                    text: App.loginStatus || qsTr("Waiting for a QR code…")
                     color: Theme.onSurfaceVariant
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignHCenter
@@ -152,7 +152,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: stageCol.width
                 Label {
-                    text: App.authHint || "Enter your phone number."
+                    text: App.authHint || qsTr("Enter your phone number.")
                     color: Theme.onSurfaceVariant
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignHCenter
@@ -160,13 +160,13 @@ Item {
                 }
                 TextField {
                     id: phoneField
-                    placeholderText: "Phone number (e.g. +15551234567)"
+                    placeholderText: qsTr("Phone number (e.g. +15551234567)")
                     inputMethodHints: Qt.ImhDigitsOnly | Qt.ImhNoPredictiveText
                     Layout.fillWidth: true
                     onAccepted: flow.submit("phone", text)
                 }
                 WdButton {
-                    text: "Continue"
+                    text: qsTr("Continue")
                     enabled: phoneField.text.length >= 6
                     Layout.fillWidth: true
                     Material.background: Theme.primary
@@ -182,7 +182,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: stageCol.width
                 Label {
-                    text: App.authHint || "Enter the code you received."
+                    text: App.authHint || qsTr("Enter the code you received.")
                     color: Theme.onSurfaceVariant
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignHCenter
@@ -190,13 +190,13 @@ Item {
                 }
                 TextField {
                     id: codeField
-                    placeholderText: "Code"
+                    placeholderText: qsTr("Code")
                     inputMethodHints: Qt.ImhDigitsOnly | Qt.ImhNoPredictiveText
                     Layout.fillWidth: true
                     onAccepted: flow.submit("code", text)
                 }
                 WdButton {
-                    text: "Continue"
+                    text: qsTr("Continue")
                     enabled: codeField.text.length >= 4
                     Layout.fillWidth: true
                     Material.background: Theme.primary
@@ -212,7 +212,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: stageCol.width
                 Label {
-                    text: App.authHint || "Enter your two-step verification password."
+                    text: App.authHint || qsTr("Enter your two-step verification password.")
                     color: Theme.onSurfaceVariant
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignHCenter
@@ -220,13 +220,13 @@ Item {
                 }
                 TextField {
                     id: passField
-                    placeholderText: "Password"
+                    placeholderText: qsTr("Password")
                     echoMode: TextInput.Password
                     Layout.fillWidth: true
                     onAccepted: flow.submit("password", text)
                 }
                 WdButton {
-                    text: "Continue"
+                    text: qsTr("Continue")
                     enabled: passField.text.length > 0
                     Layout.fillWidth: true
                     Material.background: Theme.primary
@@ -242,7 +242,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: stageCol.width
                 Label {
-                    text: "Enter this code on your phone:"
+                    text: qsTr("Enter this code on your phone:")
                     color: Theme.onSurfaceVariant
                     horizontalAlignment: Text.AlignHCenter
                     Layout.fillWidth: true
@@ -263,7 +263,7 @@ Item {
                 Layout.fillWidth: true
                 Layout.preferredWidth: stageCol.width
                 Label {
-                    text: App.authHint || "Linking failed."
+                    text: App.authHint || qsTr("Linking failed.")
                     color: Theme.error
                     wrapMode: Text.Wrap
                     horizontalAlignment: Text.AlignHCenter
@@ -275,7 +275,7 @@ Item {
             // shown alongside the QR, not hidden behind a reveal button.
             Label {
                 visible: pairAlt.visible
-                text: "Or pair with code"
+                text: qsTr("Or pair with code")
                 color: Theme.onSurfaceVariant
                 Layout.alignment: Qt.AlignHCenter
             }
@@ -287,13 +287,13 @@ Item {
                 Layout.preferredWidth: stageCol.width
                 TextField {
                     id: altPhoneField
-                    placeholderText: "Phone number (e.g. +15551234567)"
+                    placeholderText: qsTr("Phone number (e.g. +15551234567)")
                     inputMethodHints: Qt.ImhDigitsOnly | Qt.ImhNoPredictiveText
                     Layout.fillWidth: true
                     onAccepted: flow.submit("phone", text)
                 }
                 WdButton {
-                    text: "Request code"
+                    text: qsTr("Request code")
                     enabled: altPhoneField.text.length >= 6
                     Layout.fillWidth: true
                     Material.background: Theme.primary
@@ -306,7 +306,7 @@ Item {
 
             WdButton {
                 visible: flow.showBack
-                text: "Back"
+                text: qsTr("Back")
                 flat: true
                 Material.foreground: Material.accent
                 Layout.alignment: Qt.AlignHCenter

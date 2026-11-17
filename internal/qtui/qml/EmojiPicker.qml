@@ -49,7 +49,7 @@ WdPopup {
         var out = [];
         var q = searchField.text.trim().toLowerCase();
         if (q === "" && pop._recents.length > 0) {
-            out.push({name: "Recently used", emojis: pop._recents});
+            out.push({name: qsTr("Recently used"), emojis: pop._recents});
         }
         for (var i = 0; i < pop._cats.length; i++) {
             var c = pop._cats[i];
@@ -77,7 +77,7 @@ WdPopup {
                 id: searchField
                 anchors.fill: parent
                 anchors.margins: 6
-                placeholderText: "Search emoji"
+                placeholderText: qsTr("Search emoji")
                 onTextChanged: pop.rebuild()
             }
         }

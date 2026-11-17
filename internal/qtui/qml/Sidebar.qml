@@ -65,13 +65,13 @@ Item {
                     icon.source: Qt.resolvedUrl("icons/arrow_back.svg")
                     icon.color: Theme.onSurfaceVariant
                     onClicked: side.collapseRequested()
-                    ToolTip.text: "Hide sidebar"
+                    ToolTip.text: qsTr("Hide sidebar")
                     ToolTip.visible: hovered
                     ToolTip.delay: 400
                 }
 
                 Label {
-                    text: "Chats"
+                    text: qsTr("Chats")
                     Layout.leftMargin: 8
                     font.pixelSize: 20
                     font.bold: true
@@ -86,8 +86,8 @@ Item {
                     onClicked: newMenu.popup()
                     WdMenu {
                         id: newMenu
-                        WdMenuItem { text: "New chat"; onTriggered: side.dialogReq("newchat", "", 0) }
-                        WdMenuItem { text: "New group"; onTriggered: side.dialogReq("newgroup", "", 0) }
+                        WdMenuItem { text: qsTr("New chat"); onTriggered: side.dialogReq("newchat", "", 0) }
+                        WdMenuItem { text: qsTr("New group"); onTriggered: side.dialogReq("newgroup", "", 0) }
                     }
                 }
 
@@ -98,10 +98,10 @@ Item {
                     onClicked: appMenu.popup()
                     WdMenu {
                         id: appMenu
-                        WdMenuItem { text: "New chat"; onTriggered: side.dialogReq("newchat", "", 0) }
-                        WdMenuItem { text: "Accounts"; onTriggered: side.dialogReq("accounts", "", 0) }
-                        WdMenuItem { text: "Settings"; onTriggered: side.dialogReq("settings", "", 0) }
-                        WdMenuItem { text: "About WhoDat"; onTriggered: side.dialogReq("about", "", 0) }
+                        WdMenuItem { text: qsTr("New chat"); onTriggered: side.dialogReq("newchat", "", 0) }
+                        WdMenuItem { text: qsTr("Accounts"); onTriggered: side.dialogReq("accounts", "", 0) }
+                        WdMenuItem { text: qsTr("Settings"); onTriggered: side.dialogReq("settings", "", 0) }
+                        WdMenuItem { text: qsTr("About WhoDat"); onTriggered: side.dialogReq("about", "", 0) }
                     }
                 }
             }
@@ -110,7 +110,7 @@ Item {
         // ---- search ---------------------------------------------------
         TextField {
             id: search
-            placeholderText: "Search chats"
+            placeholderText: qsTr("Search chats")
             Layout.fillWidth: true
             Layout.leftMargin: 8
             Layout.rightMargin: 8
@@ -146,7 +146,7 @@ Item {
         // ---- archived toggle ------------------------------------------
         WdItemDelegate {
             visible: App.archivedCount > 0 || side._inArchived
-            text: side._inArchived ? "← Back to chats" : "Archived (" + App.archivedCount + ")"
+            text: side._inArchived ? qsTr("← Back to chats") : qsTr("Archived (%1)").arg(App.archivedCount)
             Layout.fillWidth: true
             onClicked: {
                 side._inArchived = !side._inArchived;

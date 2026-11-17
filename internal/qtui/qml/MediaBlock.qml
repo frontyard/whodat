@@ -107,7 +107,7 @@ Item {
             WdButton {
                 anchors.centerIn: parent
                 visible: blk.localPath === "" && !blk.fetching
-                text: "Download " + blk.mediaSize
+                text: qsTr("Download %1").arg(blk.mediaSize)
                 onClicked: blk.fetch()
             }
 
@@ -120,7 +120,7 @@ Item {
                     color: blk.fg
                     iconSize: 16
                 }
-                Label { text: "View once"; color: blk.fg }
+                Label { text: qsTr("View once"); color: blk.fg }
             }
 
             MouseArea {
@@ -172,7 +172,7 @@ Item {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.margins: 8
-                text: (blk.mediaName !== "" ? blk.mediaName : "Video") + "  " + blk.mediaSize
+                text: (blk.mediaName !== "" ? blk.mediaName : qsTr("Video")) + "  " + blk.mediaSize
                 color: "white"
                 font.pixelSize: 12
                 style: Text.Outline
@@ -257,7 +257,7 @@ Item {
                 onPlaybackStateChanged: {
                     if (playbackState === MediaPlayer.StoppedState) source = "";
                 }
-                onErrorOccurred: (e, s) => Bridge.cmd("notify", {msg: "Playback failed"})
+                onErrorOccurred: (e, s) => Bridge.cmd("notify", {msg: qsTr("Playback failed")})
             }
         }
 
@@ -278,14 +278,14 @@ Item {
                 Layout.fillWidth: true
                 spacing: 0
                 Label {
-                    text: blk.mediaName !== "" ? blk.mediaName : "Document"
+                    text: blk.mediaName !== "" ? blk.mediaName : qsTr("Document")
                     elide: Text.ElideMiddle
                     color: blk.fg
                     font.pixelSize: 13
                     Layout.fillWidth: true
                 }
                 Label {
-                    text: blk.mediaSize + (blk.fetching ? " — downloading…" : "")
+                    text: blk.fetching ? qsTr("%1 — downloading…").arg(blk.mediaSize) : blk.mediaSize
                     color: blk.fg
                     opacity: 0.7
                     font.pixelSize: 11

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 )
 
@@ -17,7 +18,7 @@ func (s *Service) AuthStages() []string {
 // running or paired — Connect starts it automatically too).
 func (s *Service) StartAuth(ctx context.Context) error {
 	if s.Paired() {
-		return errors.New("already paired")
+		return errors.New(i18n.T("already paired"))
 	}
 	return s.startQR(ctx)
 }
@@ -34,5 +35,5 @@ func (s *Service) SubmitAuth(ctx context.Context, stage, value string) error {
 		s.sink.Publish(Event{Kind: EvAuthStage, AuthStage: protocol.StagePairCode, AuthHint: code})
 		return nil
 	}
-	return errors.New("unsupported auth stage " + stage)
+	return errors.New(i18n.T("unsupported auth stage %1", stage))
 }

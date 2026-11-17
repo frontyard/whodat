@@ -6,7 +6,7 @@ import QtQuick.Controls.Material
 // PollDialog collects a question + options and sends a single-select poll.
 Dialog {
     id: dlg
-    title: "Create poll"
+    title: qsTr("Create poll")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -24,18 +24,18 @@ Dialog {
 
     footer: DialogButtonBox {
         WdButton {
-            text: "Cancel"
+            text: qsTr("Cancel")
             DialogButtonBox.buttonRole: DialogButtonBox.RejectRole
             onClicked: dlg.close()
         }
         WdButton {
-            text: "Send poll"
+            text: qsTr("Send poll")
             enabled: question.text.trim() !== "" && dlg.optionCount() >= 2
             DialogButtonBox.buttonRole: DialogButtonBox.AcceptRole
             onClicked: {
                 var opts = dlg.optionValues();
                 Bridge.cmd("sendPoll", {jid: App.chatJID, question: question.text.trim(), options: opts}, function(ok, data, err) {
-                    if (!ok) Bridge.cmd("notify", {msg: "Poll failed: " + err});
+                    if (!ok) Bridge.cmd("notify", {msg: qsTr("Poll failed: %1").arg(err)});
                 });
                 dlg.close();
             }
@@ -58,13 +58,13 @@ Dialog {
 
         TextField {
             id: question
-            placeholderText: "Question"
+            placeholderText: qsTr("Question")
             Layout.fillWidth: true
             Layout.margins: 8
         }
 
         Label {
-            text: "Options"
+            text: qsTr("Options")
             color: Theme.onSurfaceVariant
             font.pixelSize: 12
             Layout.leftMargin: 8
@@ -84,7 +84,7 @@ Dialog {
                 spacing: 4
 
                 TextField {
-                    placeholderText: "Option " + (index + 1)
+                    placeholderText: qsTr("Option %1").arg(index + 1)
                     text: model.text
                     Layout.fillWidth: true
                     Layout.leftMargin: 8
@@ -101,7 +101,7 @@ Dialog {
         }
 
         WdItemDelegate {
-            text: "Add option"
+            text: qsTr("Add option")
             enabled: optModel.count < 12
             Layout.fillWidth: true
             onClicked: optModel.append({text: ""})

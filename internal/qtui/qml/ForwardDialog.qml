@@ -7,7 +7,7 @@ import QtQuick.Controls.Material
 // loads the candidate list (all chats except the source) and shows the dialog.
 Dialog {
     id: dlg
-    title: "Forward to"
+    title: qsTr("Forward to")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -43,7 +43,7 @@ Dialog {
 
         TextField {
             id: search
-            placeholderText: "Search chats"
+            placeholderText: qsTr("Search chats")
             Layout.fillWidth: true
             Layout.margins: 8
             rightPadding: clearSearch.visible ? clearSearch.width + 8 : Material.textFieldHorizontalPadding
@@ -91,7 +91,7 @@ Dialog {
                         Layout.fillWidth: true
                     }
                     Label {
-                        text: modelData.isGroup ? "Group" : ""
+                        text: modelData.isGroup ? qsTr("Group") : ""
                         color: Theme.onSurfaceVariant
                         font.pixelSize: 11
                         Layout.rightMargin: 10
@@ -102,7 +102,7 @@ Dialog {
                     var to = modelData.jid;
                     dlg.close();
                     Bridge.cmd("forward", {fromJid: dlg.fromJid, msgId: dlg.msgId, toJid: to}, function(ok, data, err) {
-                        if (!ok) Bridge.cmd("notify", {msg: "Forward failed: " + err});
+                        if (!ok) Bridge.cmd("notify", {msg: qsTr("Forward failed: %1").arg(err)});
                     });
                 }
             }

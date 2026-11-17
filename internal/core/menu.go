@@ -5,6 +5,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -42,60 +43,60 @@ func (a *App) ChatMenuItems(c *store.Chat) []MenuItem {
 	if svc := a.SvcFor(c.JID); svc != nil {
 		caps = svc.Caps()
 	}
-	info := "Contact info"
+	info := i18n.T("Contact info")
 	if c.Kind == store.KindGroup {
-		info = "Group info"
+		info = i18n.T("Group info")
 	}
 	items := []MenuItem{{ID: ActChatInfo, Label: info}}
 	if caps.Pin {
-		pin := "Pin chat"
+		pin := i18n.T("Pin chat")
 		if c.Pinned {
-			pin = "Unpin chat"
+			pin = i18n.T("Unpin chat")
 		}
 		items = append(items, MenuItem{ID: ActPin, Label: pin})
 	}
 	if caps.Archive {
-		arch := "Archive chat"
+		arch := i18n.T("Archive chat")
 		if c.Archived {
-			arch = "Unarchive chat"
+			arch = i18n.T("Unarchive chat")
 		}
 		items = append(items, MenuItem{ID: ActArchive, Label: arch})
 	}
 	if c.Unread > 0 {
-		items = append(items, MenuItem{ID: ActMarkRead, Label: "Mark as read"})
+		items = append(items, MenuItem{ID: ActMarkRead, Label: i18n.T("Mark as read")})
 	} else {
-		items = append(items, MenuItem{ID: ActMarkUnread, Label: "Mark as unread"})
+		items = append(items, MenuItem{ID: ActMarkUnread, Label: i18n.T("Mark as unread")})
 	}
 	if caps.Mute {
-		mute := "Mute chat"
+		mute := i18n.T("Mute chat")
 		if c.Muted {
-			mute = "Unmute chat"
+			mute = i18n.T("Unmute chat")
 		}
 		items = append(items, MenuItem{ID: ActMute, Label: mute})
 	}
 
 	if caps.Disappearing && !c.Left {
-		disapp := "Disappearing messages"
+		disapp := i18n.T("Disappearing messages")
 		if c.DisappSecs > 0 {
-			disapp = "Disappearing: " + DisappText(c.DisappSecs)
+			disapp = i18n.T("Disappearing: %1", DisappText(c.DisappSecs))
 		}
 		items = append(items, MenuItem{ID: ActDisapp, Label: disapp})
 	}
 
 	if caps.Block && c.Kind == store.KindDM {
-		bl := "Block"
+		bl := i18n.T("Block")
 		if ct, err := a.DB.GetContact(context.Background(), c.JID); err == nil && ct != nil && ct.Blocked {
-			bl = "Unblock"
+			bl = i18n.T("Unblock")
 		}
 		items = append(items, MenuItem{ID: ActBlock, Label: bl})
 	}
 
-	items = append(items, MenuItem{ID: ActClear, Label: "Clear chat"})
+	items = append(items, MenuItem{ID: ActClear, Label: i18n.T("Clear chat")})
 
 	if c.Kind == store.KindGroup && caps.Leave && !c.Left {
-		items = append(items, MenuItem{ID: ActLeave, Label: "Leave group"})
+		items = append(items, MenuItem{ID: ActLeave, Label: i18n.T("Leave group")})
 	} else if caps.DeleteChat {
-		items = append(items, MenuItem{ID: ActDelete, Label: "Delete chat"})
+		items = append(items, MenuItem{ID: ActDelete, Label: i18n.T("Delete chat")})
 	}
 	return items
 }
@@ -109,7 +110,7 @@ func (a *App) RunChatAction(c *store.Chat, id string) bool {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 			defer cancel()
 			if err := f(ctx); err != nil && a.Toast != nil {
-				a.Toast(pfx + ": " + protocol.UserErr(err).Error())
+				a.Toast(i18n.T("%1: %2", pfx, protocol.UserErr(err).Error()))
 			}
 		}()
 	}
@@ -120,24 +121,24 @@ func (a *App) RunChatAction(c *store.Chat, id string) bool {
 	switch id {
 	case ActPin:
 		p := !c.Pinned
-		run(func(ctx context.Context) error { return svc.SetChatPin(ctx, c.JID, p) }, "Pin failed")
+		run(func(ctx context.Context) error { return svc.SetChatPin(ctx, c.JID, p) }, i18n.T("Pin failed"))
 	case ActArchive:
 		v := !c.Archived
-		run(func(ctx context.Context) error { return svc.SetChatArchive(ctx, c.JID, v) }, "Archive failed")
+		run(func(ctx context.Context) error { return svc.SetChatArchive(ctx, c.JID, v) }, i18n.T("Archive failed"))
 	case ActMarkRead:
 		a.MarkChatRead(c.JID)
 	case ActMarkUnread:
-		run(func(ctx context.Context) error { return svc.MarkChatUnreadSync(ctx, c.JID, true) }, "Failed")
+		run(func(ctx context.Context) error { return svc.MarkChatUnreadSync(ctx, c.JID, true) }, i18n.T("Failed"))
 	case ActMute:
 		m := !c.Muted
-		run(func(ctx context.Context) error { return svc.SetChatMute(ctx, c.JID, m) }, "Mute failed")
+		run(func(ctx context.Context) error { return svc.SetChatMute(ctx, c.JID, m) }, i18n.T("Mute failed"))
 	case ActBlock:
 		blocked := false
 		if ct, err := a.DB.GetContact(context.Background(), c.JID); err == nil && ct != nil {
 			blocked = ct.Blocked
 		}
 		b := !blocked
-		run(func(ctx context.Context) error { return svc.SetBlocked(ctx, c.JID, b) }, "Block failed")
+		run(func(ctx context.Context) error { return svc.SetBlocked(ctx, c.JID, b) }, i18n.T("Block failed"))
 	case ActClear:
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
@@ -152,11 +153,11 @@ func (a *App) RunChatAction(c *store.Chat, id string) bool {
 			}
 		}()
 	case ActLeave:
-		run(func(ctx context.Context) error { return svc.LeaveGroup(ctx, c.JID) }, "Leave failed")
+		run(func(ctx context.Context) error { return svc.LeaveGroup(ctx, c.JID) }, i18n.T("Leave failed"))
 	case ActDelete:
-		run(func(ctx context.Context) error { return svc.DeleteChat(ctx, c.JID) }, "Delete failed")
+		run(func(ctx context.Context) error { return svc.DeleteChat(ctx, c.JID) }, i18n.T("Delete failed"))
 	case ActRefreshAv:
-		run(func(ctx context.Context) error { return a.RefreshAvatar(ctx, c.JID) }, "Avatar refresh failed")
+		run(func(ctx context.Context) error { return a.RefreshAvatar(ctx, c.JID) }, i18n.T("Avatar refresh failed"))
 	default:
 		return false
 	}

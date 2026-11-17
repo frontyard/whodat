@@ -37,14 +37,14 @@ Dialog {
         }
 
         Label {
-            text: "Version " + (App.appVersion || "")
+            text: qsTr("Version %1").arg(App.appVersion || "")
             color: Theme.onSurfaceVariant
             font.pixelSize: 12
             Layout.alignment: Qt.AlignHCenter
         }
 
         Label {
-            text: "Unofficial WhatsApp messaging app for Linux.\nNot affiliated with WhatsApp or Meta."
+            text: qsTr("Unofficial WhatsApp messaging app for Linux.\nNot affiliated with WhatsApp or Meta.")
             wrapMode: Text.WordWrap
             horizontalAlignment: Text.AlignHCenter
             color: Theme.onSurface

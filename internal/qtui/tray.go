@@ -7,6 +7,7 @@ import (
 	qt "github.com/mappu/miqt/qt6"
 	"github.com/mappu/miqt/qt6/mainthread"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 )
 
@@ -23,10 +24,10 @@ func (h *Host) initTray() {
 	tray.SetToolTip("WhoDat")
 
 	menu := qt.NewQMenu2()
-	show := menu.AddActionWithText("Show WhoDat")
-	pause := menu.AddActionWithText("Pause notifications")
+	show := menu.AddActionWithText(i18n.T("Show WhoDat"))
+	pause := menu.AddActionWithText(i18n.T("Pause notifications"))
 	pause.SetCheckable(true)
-	quit := menu.AddActionWithText("Quit")
+	quit := menu.AddActionWithText(i18n.T("Quit"))
 	show.OnTriggered(func() { h.requestWindow() })
 	pause.OnToggled(func(checked bool) { h.app.NotifPaused.Store(checked) })
 	quit.OnTriggered(func() { qt.QCoreApplication_Quit() })
@@ -114,7 +115,7 @@ func (h *Host) watchTrayUnread() {
 		mainthread.Start(func() {
 			tip := "WhoDat"
 			if n > 0 {
-				tip = "WhoDat — " + itoa(n) + " unread"
+				tip = i18n.Tn("WhoDat — %n unread", "WhoDat — %n unread", n)
 			}
 			if h.tray != nil {
 				h.tray.SetToolTip(tip)
@@ -139,20 +140,3 @@ func (h *Host) watchTrayUnread() {
 		}
 	}()
 }
-
-// itoa formats small ints without importing strconv for one call site.
-func itoa(n int) string {
-	if n == 0 {
-		return "0"
-	}
-	var buf [12]byte
-	i := len(buf)
-	for n > 0 {
-		i--
-		buf[i] = byte('0' + n%10)
-		n /= 10
-	}
-	return string(buf[i:])
-}
-
-var _ = itoa // keep helper referenced in minimal builds

@@ -3,7 +3,7 @@ package core
 import (
 	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"io"
 	"net/http"
 	"os"
@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/frontyard/whodat/internal/config"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -95,7 +96,7 @@ func (a *App) ReactorName(ctx context.Context, jid store.PeerID) string {
 	}
 	for _, j := range me {
 		if JIDUser(j) == JIDUser(jid) {
-			return "You"
+			return i18n.T("You")
 		}
 	}
 	return a.ContactName(ctx, jid)
@@ -296,7 +297,7 @@ func (a *App) RefreshAvatar(ctx context.Context, jid store.PeerID) error {
 
 	svc := a.SvcFor(jid)
 	if svc == nil {
-		return fmt.Errorf("no service for %s", jid)
+		return errors.New(i18n.T("no service for %1", jid.String()))
 	}
 	url, err := svc.GetProfilePictureURL(ctx, jid)
 	if err != nil {
@@ -319,7 +320,7 @@ func (a *App) RefreshAvatar(ctx context.Context, jid store.PeerID) error {
 		}
 		defer resp.Body.Close()
 		if resp.StatusCode != 200 {
-			return fmt.Errorf("avatar fetch: %s", resp.Status)
+			return errors.New(i18n.T("avatar fetch: %1", resp.Status))
 		}
 		if data, err = io.ReadAll(io.LimitReader(resp.Body, 8<<20)); err != nil {
 			return err

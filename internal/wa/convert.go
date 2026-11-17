@@ -8,6 +8,7 @@ import (
 	"github.com/polymorfa/hypermeow/types/events"
 	"google.golang.org/protobuf/proto"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/media"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -152,32 +153,32 @@ func preview(m *store.Message) string {
 	if body == "" {
 		switch m.Type {
 		case store.TImage:
-			body = "Photo"
+			body = i18n.T("Photo")
 		case store.TVideo:
-			body = "Video"
+			body = i18n.T("Video")
 		case store.TAudio:
-			body = "Audio"
+			body = i18n.T("Audio")
 		case store.TPTT:
-			body = "Voice message"
+			body = i18n.T("Voice message")
 		case store.TDocument:
 			body = m.MediaName
 			if body == "" {
-				body = "Document"
+				body = i18n.T("Document")
 			}
 		case store.TSticker:
-			body = "Sticker"
+			body = i18n.T("Sticker")
 		case store.TLocation:
-			body = "Location"
+			body = i18n.T("Location")
 		case store.TContact:
-			body = "Contact"
+			body = i18n.T("Contact")
 		case store.TCall:
-			body = "Call"
+			body = i18n.T("Call")
 		case store.TPoll:
-			body = "Poll"
+			body = i18n.T("Poll")
 		case store.TRevoked:
-			body = "Message deleted"
+			body = i18n.T("Message deleted")
 		default:
-			body = "Message"
+			body = i18n.T("Message")
 		}
 	}
 	return body
@@ -341,7 +342,7 @@ func (s *Service) convert(chatJID store.PeerID, id string, senderJID store.PeerI
 		if lm != nil {
 			out.Text = locationText(lm.GetDegreesLatitude(), lm.GetDegreesLongitude(), lm.GetName())
 		} else if llm := wm.GetLiveLocationMessage(); llm != nil {
-			out.Text = locationText(llm.GetDegreesLatitude(), llm.GetDegreesLongitude(), "Live location")
+			out.Text = locationText(llm.GetDegreesLatitude(), llm.GetDegreesLongitude(), i18n.T("Live location"))
 		}
 	case store.TContact:
 		out.Text = contactText(wm)
@@ -394,7 +395,7 @@ func locationText(lat, lon float64, name string) string {
 	if name != "" {
 		return name
 	}
-	return "Location"
+	return i18n.T("Location")
 }
 
 func contactText(wm *waE2E.Message) string {
@@ -404,7 +405,7 @@ func contactText(wm *waE2E.Message) string {
 	if arr := wm.GetContactsArrayMessage(); arr != nil && len(arr.GetContacts()) > 0 {
 		return arr.GetContacts()[0].GetDisplayName()
 	}
-	return "Contact"
+	return i18n.T("Contact")
 }
 
 // IsCallLog identifies call log stubs we render as "call" rows.

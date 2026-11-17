@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"os/exec"
+	"strconv"
 	"time"
 )
 
@@ -41,7 +42,7 @@ func (h *Host) niriFocusWindow() {
 							continue
 						}
 						if !w.Focused {
-							_ = exec.Command(niri, "msg", "action", "focus-window", "--id", itoa(w.ID)).Run()
+							_ = exec.Command(niri, "msg", "action", "focus-window", "--id", strconv.Itoa(w.ID)).Run()
 						}
 						return
 					}

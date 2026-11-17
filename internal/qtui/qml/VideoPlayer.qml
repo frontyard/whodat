@@ -36,7 +36,7 @@ Dialog {
             id: player
             videoOutput: vout
             audioOutput: AudioOutput {}
-            onErrorOccurred: (e, s) => Bridge.cmd("notify", {msg: "Playback failed: " + s})
+            onErrorOccurred: (e, s) => Bridge.cmd("notify", {msg: qsTr("Playback failed: %1").arg(s)})
         }
 
         Rectangle {

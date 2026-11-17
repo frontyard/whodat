@@ -32,7 +32,7 @@ export PKG_CONFIG_PATH := $(CURDIR)/$(QTSYSROOT_LIBDIR)$(if $(PKG_CONFIG_PATH),:
 QTRUN := LD_LIBRARY_PATH=$(CURDIR)/$(dir $(QTSYSROOT_LIBDIR))
 endif
 
-.PHONY: all run test lint qmllint fmt tidy install uninstall appimage pkg clean
+.PHONY: all run test lint qmllint fmt tidy i18n install uninstall appimage pkg clean
 
 all: $(BUILDDIR)/$(APP)
 
@@ -54,6 +54,11 @@ lint:
 QMLLINT ?= $(firstword $(wildcard .sysroot-qt/usr/lib/qt6/bin/qmllint /usr/lib/qt6/bin/qmllint))
 qmllint:
 	$(if $(QMLLINT),LD_LIBRARY_PATH=$(CURDIR)/$(dir $(QTSYSROOT_LIBDIR)) $(QMLLINT) internal/qtui/qml/*.qml,@echo "qmllint not found")
+
+# Regenerate the i18n catalogs: scans qsTr() in QML and i18n.T/Tc/Tn in Go,
+# rewrites internal/qtui/i18n/whodat.ts and merges whodat_<lang>.ts files.
+i18n:
+	go run ./tools/i18nextract
 
 fmt:
 	gofmt -w cmd internal

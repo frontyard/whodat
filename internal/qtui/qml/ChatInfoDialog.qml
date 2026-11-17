@@ -7,7 +7,7 @@ import QtQuick.Controls.Material
 // starred, verify/block (DM), participants + admin actions (group).
 Dialog {
     id: dlg
-    title: "Chat info"
+    title: qsTr("Chat info")
     modal: true
     Overlay.modal: Scrim {}
     anchors.centerIn: Overlay.overlay
@@ -34,9 +34,17 @@ Dialog {
                 dlg.info = data;
                 if (data.isGroup) dlg.loadParticipants();
             } else {
-                Bridge.cmd("notify", {msg: "Info failed: " + err});
+                Bridge.cmd("notify", {msg: qsTr("Info failed: %1").arg(err)});
             }
         });
+    }
+
+    // Whole phrases only — a leading " · " fragment would lose its space
+    // to catalog whitespace trimming.
+    function partLabel(name, isMe, isAdmin) {
+        var n = isMe ? qsTr("%1 (you)").arg(name) : name;
+        if (isAdmin) n = qsTr("%1 · admin").arg(n);
+        return n;
     }
 
     function loadParticipants() {
@@ -102,8 +110,8 @@ Dialog {
                 contentItem: RowLayout {
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: "Disappearing messages"; color: Theme.onSurface }
-                        Label { text: dlg.info.disappText || "Off"; color: Theme.onSurfaceVariant; font.pixelSize: 12 }
+                        Label { text: qsTr("Disappearing messages"); color: Theme.onSurface }
+                        Label { text: dlg.info.disappText || qsTr("Off"); color: Theme.onSurfaceVariant; font.pixelSize: 12 }
                     }
                 }
                 onClicked: dlg.openDisapp(dlg.jid, dlg.info.disappSecs || 0)
@@ -113,8 +121,8 @@ Dialog {
                 contentItem: RowLayout {
                     ColumnLayout {
                         Layout.fillWidth: true
-                        Label { text: "Starred messages"; color: Theme.onSurface }
-                        Label { text: (dlg.info.starredCount || 0) + " items"; color: Theme.onSurfaceVariant; font.pixelSize: 12 }
+                        Label { text: qsTr("Starred messages"); color: Theme.onSurface }
+                        Label { text: qsTr("%n item(s)", "", dlg.info.starredCount || 0); color: Theme.onSurfaceVariant; font.pixelSize: 12 }
                     }
                 }
                 onClicked: dlg.openStarred(dlg.jid)
@@ -122,23 +130,23 @@ Dialog {
             WdItemDelegate {
                 visible: dlg.info.isGroup === false
                 Layout.fillWidth: true
-                text: "Verify security code"
+                text: qsTr("Verify security code")
                 onClicked: dlg.openVerify(dlg.jid)
             }
             WdItemDelegate {
                 visible: dlg.info.isGroup === true && !dlg.info.left
                 Layout.fillWidth: true
-                text: "Copy invite link"
+                text: qsTr("Copy invite link")
                 onClicked: Bridge.cmd("groupInvite", {jid: dlg.jid}, function(ok, data, err) {
-                    if (ok) { linkField.text = data.link; linkField.selectAll(); linkField.copy(); linkField.text = ""; Bridge.cmd("notify", {msg: "Invite link copied"}); }
-                    else Bridge.cmd("notify", {msg: "Invite failed: " + err});
+                    if (ok) { linkField.text = data.link; linkField.selectAll(); linkField.copy(); linkField.text = ""; Bridge.cmd("notify", {msg: qsTr("Invite link copied")}); }
+                    else Bridge.cmd("notify", {msg: qsTr("Invite failed: %1").arg(err)});
                 })
             }
 
             // ---- participants ---------------------------------------------
             Label {
                 visible: dlg.info.isGroup === true
-                text: "Participants"
+                text: qsTr("Participants")
                 font.bold: true
                 color: Theme.onSurface
                 Layout.leftMargin: 14
@@ -158,7 +166,7 @@ Dialog {
                             Layout.fillWidth: true
                             spacing: 0
                             Label {
-                                text: name + (isMe ? " (you)" : "") + (isAdmin ? " · admin" : "")
+                                text: dlg.partLabel(name, isMe, isAdmin)
                                 color: Theme.onSurface
                             }
                             Label { text: phone; color: Theme.onSurfaceVariant; font.pixelSize: 11 }
@@ -174,12 +182,12 @@ Dialog {
                 property string jid: ""
                 property bool isAdmin: false
                 WdMenuItem {
-                    text: partMenu.isAdmin ? "Demote" : "Make admin"
+                    text: partMenu.isAdmin ? qsTr("Demote") : qsTr("Make admin")
                     onTriggered: Bridge.cmd("groupUpdate", {jid: dlg.jid, participant: partMenu.jid,
                         action: partMenu.isAdmin ? "demote" : "promote"}, function(ok) { if (ok) dlg.loadParticipants(); })
                 }
                 WdMenuItem {
-                    text: "Remove"
+                    text: qsTr("Remove")
                     onTriggered: Bridge.cmd("groupUpdate", {jid: dlg.jid, participant: partMenu.jid,
                         action: "remove"}, function(ok) { if (ok) dlg.loadParticipants(); })
                 }
@@ -192,7 +200,7 @@ Dialog {
                 visible: dlg.info.isGroup === false
                 Layout.fillWidth: true
                 contentItem: Label {
-                    text: dlg.info.blocked ? "Unblock" : "Block"
+                    text: dlg.info.blocked ? qsTr("Unblock") : qsTr("Block")
                     color: Theme.error
                 }
                 onClicked: {
@@ -205,7 +213,7 @@ Dialog {
             WdItemDelegate {
                 visible: dlg.info.isGroup === true && !dlg.info.left
                 Layout.fillWidth: true
-                contentItem: Label { text: "Leave group"; color: Theme.error }
+                contentItem: Label { text: qsTr("Leave group"); color: Theme.error }
                 onClicked: {
                     Bridge.cmd("chatAction", {jid: dlg.jid, id: "leave"});
                     dlg.close();
@@ -214,7 +222,7 @@ Dialog {
             WdItemDelegate {
                 visible: dlg.info.isGroup === true && dlg.info.left === true
                 Layout.fillWidth: true
-                contentItem: Label { text: "Delete chat"; color: Theme.error }
+                contentItem: Label { text: qsTr("Delete chat"); color: Theme.error }
                 onClicked: {
                     Bridge.cmd("chatAction", {jid: dlg.jid, id: "delete"});
                     dlg.close();
@@ -227,7 +235,7 @@ Dialog {
 
     Dialog {
         id: renameDlg
-        title: "Rename group"
+        title: qsTr("Rename group")
         modal: true
         Overlay.modal: Scrim {}
         anchors.centerIn: Overlay.overlay
@@ -236,8 +244,8 @@ Dialog {
         onOpened: nameField.text = dlg.info.name || ""
         onAccepted: Bridge.cmd("groupRename", {jid: dlg.jid, name: nameField.text}, function(ok, d, e) {
             if (ok) { dlg.info.name = nameField.text; dlg.infoChanged(); }
-            else Bridge.cmd("notify", {msg: "Rename failed: " + e});
+            else Bridge.cmd("notify", {msg: qsTr("Rename failed: %1").arg(e)});
         })
-        TextField { id: nameField; anchors.fill: parent; placeholderText: "Group name" }
+        TextField { id: nameField; anchors.fill: parent; placeholderText: qsTr("Group name") }
     }
 }

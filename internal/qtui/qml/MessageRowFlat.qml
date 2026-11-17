@@ -90,7 +90,7 @@ Item {
         // ---- system message ------------------------------------------
         Label {
             visible: root.msgType === "system" || root.msgType === "revoked"
-            text: root.msgType === "revoked" ? "🚫 Message deleted" : root.text
+            text: root.msgType === "revoked" ? "🚫 " + qsTr("Message deleted") : root.text
             font.italic: true
             color: Theme.onSurfaceVariant
             font.pixelSize: 13
@@ -121,25 +121,25 @@ Item {
 
             WdMenu {
                 id: rowMenu
-                WdMenuItem { text: "Reply"; onTriggered: root.replyRequested(root.msgId, root.senderName, root.text) }
+                WdMenuItem { text: qsTr("Reply"); onTriggered: root.replyRequested(root.msgId, root.senderName, root.text) }
                 WdMenuItem {
-                    text: "React…"
+                    text: qsTr("React…")
                     visible: root.canReact
                     height: visible ? implicitHeight : 0
                     onTriggered: Qt.callLater(reactPop.open)
                 }
-                WdMenuItem { text: "Copy"; enabled: root.text !== ""; onTriggered: copyHelper.copyText() }
-                WdMenuItem { text: "Forward"; onTriggered: root.forwardRequested(root.msgId) }
+                WdMenuItem { text: qsTr("Copy"); enabled: root.text !== ""; onTriggered: copyHelper.copyText() }
+                WdMenuItem { text: qsTr("Forward"); onTriggered: root.forwardRequested(root.msgId) }
                 WdMenuItem {
                     visible: App.chatCapsStar !== false
                     height: visible ? implicitHeight : 0
-                    text: root.starred ? "Unstar" : "Star"
+                    text: root.starred ? qsTr("Unstar") : qsTr("Star")
                     onTriggered: Bridge.cmd("sendStar", {jid: App.chatJID, msgId: root.msgId, on: !root.starred}, function(ok, d, e) {
-                        if (!ok) Bridge.cmd("notify", {msg: "Star failed: " + e});
+                        if (!ok) Bridge.cmd("notify", {msg: qsTr("Star failed: %1").arg(e)});
                     })
                 }
                 WdMenuItem {
-                    text: "Edit"
+                    text: qsTr("Edit")
                     // invisible MenuItems still take a row in Menu's internal
                     // ListView — height must be collapsed too.
                     visible: root.fromMe && !root.revoked && root.msgType === "text"
@@ -147,19 +147,19 @@ Item {
                     onTriggered: root.editRequested(root.msgId, root.text)
                 }
                 WdMenuItem {
-                    text: "Delete for everyone"
+                    text: qsTr("Delete for everyone")
                     visible: root.fromMe && !root.revoked
                     height: visible ? implicitHeight : 0
                     onTriggered: Bridge.cmd("sendRevoke", {jid: App.chatJID, msgId: root.msgId}, function(ok, d, e) {
-                        if (!ok) Bridge.cmd("notify", {msg: "Delete failed: " + e});
+                        if (!ok) Bridge.cmd("notify", {msg: qsTr("Delete failed: %1").arg(e)});
                     })
                 }
                 WdMenuItem {
-                    text: "Delete for me"
+                    text: qsTr("Delete for me")
                     onTriggered: Bridge.cmd("deleteForMe", {jid: App.chatJID, msgId: root.msgId})
                 }
                 WdMenuItem {
-                    text: "Jump to quoted"
+                    text: qsTr("Jump to quoted")
                     visible: root.quotedId !== ""
                     height: visible ? implicitHeight : 0
                     onTriggered: root.jumpTo(root.quotedId)
@@ -189,7 +189,7 @@ Item {
                             onClicked: {
                                 reactPop.close();
                                 Bridge.cmd("sendReaction", {jid: App.chatJID, msgId: root.msgId, emoji: modelData}, function(ok, d, e) {
-                                    if (!ok) Bridge.cmd("notify", {msg: "Reaction failed: " + e});
+                                    if (!ok) Bridge.cmd("notify", {msg: qsTr("Reaction failed: %1").arg(e)});
                                 });
                             }
                         }
@@ -236,7 +236,7 @@ Item {
                     spacing: 6
 
                     Label {
-                        text: root.fromMe ? "You" : root.senderName
+                        text: root.fromMe ? qsTr("You") : root.senderName
                         visible: text !== ""
                         color: root.fromMe ? Theme.primary : Theme.secondary
                         font.bold: true
@@ -253,7 +253,7 @@ Item {
                     }
                     Label {
                         visible: root.edited
-                        text: "edited"
+                        text: qsTr("edited")
                         font.italic: true
                         color: Theme.onSurfaceVariant
                         font.pixelSize: 11
@@ -270,7 +270,7 @@ Item {
                 // forwarded marker
                 Label {
                     visible: root.forwarded
-                    text: root.fwdFrom !== "" ? "Forwarded from " + root.fwdFrom : "Forwarded"
+                    text: root.fwdFrom !== "" ? qsTr("Forwarded from %1").arg(root.fwdFrom) : qsTr("Forwarded")
                     font.italic: true
                     color: Theme.onSurfaceVariant
                     font.pixelSize: 12
@@ -519,7 +519,7 @@ Item {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: Bridge.cmd("votePoll", {jid: App.chatJID, msgId: root.msgId, option: modelData.name}, function(ok, d, e) {
-                                    if (!ok) Bridge.cmd("notify", {msg: "Vote failed: " + e});
+                                    if (!ok) Bridge.cmd("notify", {msg: qsTr("Vote failed: %1").arg(e)});
                                 })
                             }
                         }
@@ -637,15 +637,15 @@ Item {
     }
     function typeFallback() {
         switch (root.msgType) {
-        case "image":    return "Photo";
-        case "video":    return "Video";
-        case "audio":    return "Audio";
-        case "ptt":      return "Voice message";
-        case "document": return root.mediaName || "Document";
-        case "sticker":  return "Sticker";
-        case "location": return "📍 Location";
-        case "contact":  return "👤 Contact";
-        case "call":     return "📞 Call";
+        case "image":    return qsTr("Photo");
+        case "video":    return qsTr("Video");
+        case "audio":    return qsTr("Audio");
+        case "ptt":      return qsTr("Voice message");
+        case "document": return root.mediaName || qsTr("Document");
+        case "sticker":  return qsTr("Sticker");
+        case "location": return "📍 " + qsTr("Location");
+        case "contact":  return "👤 " + qsTr("Contact");
+        case "call":     return "📞 " + qsTr("Call");
         default:         return root.msgType;
         }
     }

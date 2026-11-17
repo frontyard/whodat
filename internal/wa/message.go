@@ -13,6 +13,7 @@ import (
 	"github.com/polymorfa/hypermeow/types"
 	"github.com/polymorfa/hypermeow/types/events"
 
+	"github.com/frontyard/whodat/internal/i18n"
 	appstore "github.com/frontyard/whodat/internal/store"
 )
 
@@ -76,10 +77,7 @@ func (s *Service) persistCallStub(ctx context.Context, chatJID, senderJID appsto
 // callStubText renders the call-log stub and reports whether it counts as
 // unread (missed/silenced incoming calls only — ones we saw live don't).
 func callStubText(cl *waE2E.CallLogMessage, fromMe bool) (string, bool) {
-	kind := "Voice"
-	if cl.GetIsVideo() {
-		kind = "Video"
-	}
+	video := cl.GetIsVideo()
 	dur := ""
 	if d := cl.GetDurationSecs(); d > 0 {
 		dur = fmt.Sprintf(" · %d:%02d", d/60, d%60)
@@ -89,16 +87,22 @@ func callStubText(cl *waE2E.CallLogMessage, fromMe bool) (string, bool) {
 		waE2E.CallLogMessage_SILENCED_BY_DND,
 		waE2E.CallLogMessage_SILENCED_UNKNOWN_CALLER:
 		if fromMe {
-			return "No answer", false
+			return i18n.T("No answer"), false
 		}
-		return "Missed " + strings.ToLower(kind) + " call", true
+		if video {
+			return i18n.T("Missed video call"), true
+		}
+		return i18n.T("Missed voice call"), true
 	case waE2E.CallLogMessage_REJECTED:
-		return "Declined " + strings.ToLower(kind) + " call", false
-	default:
-		if fromMe {
-			return kind + " call" + dur, false
+		if video {
+			return i18n.T("Declined video call"), false
 		}
-		return kind + " call" + dur, false
+		return i18n.T("Declined voice call"), false
+	default:
+		if video {
+			return i18n.T("Video call") + dur, false
+		}
+		return i18n.T("Voice call") + dur, false
 	}
 }
 
@@ -161,9 +165,9 @@ func (s *Service) applyAction(ctx context.Context, chatJID appstore.PeerID, m *a
 		s.applyPollVote(ctx, chatJID, act)
 	case actDisapp:
 		_ = s.db.SetDisappSecs(ctx, chatJID, int(act.disappSec))
-		text := "Disappearing messages turned off"
+		text := i18n.T("Disappearing messages turned off")
 		if act.disappSec > 0 {
-			text = "Disappearing messages turned on"
+			text = i18n.T("Disappearing messages turned on")
 		}
 		m := &appstore.Message{
 			ChatJID: chatJID,

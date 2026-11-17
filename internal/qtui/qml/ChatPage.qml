@@ -26,7 +26,7 @@ Item {
             icon.source: Qt.resolvedUrl("icons/menu.svg")
             icon.color: Theme.onSurfaceVariant
             onClicked: page.sidebarToggleRequested()
-            ToolTip.text: "Show sidebar"
+            ToolTip.text: qsTr("Show sidebar")
             ToolTip.visible: hovered
             ToolTip.delay: 400
         }
@@ -42,7 +42,7 @@ Item {
                 anchors.horizontalCenter: parent.horizontalCenter
             }
             Label {
-                text: "Select a chat to start messaging"
+                text: qsTr("Select a chat to start messaging")
                 color: Theme.onSurfaceVariant
                 anchors.horizontalCenter: parent.horizontalCenter
             }
@@ -72,7 +72,7 @@ Item {
                     icon.source: Qt.resolvedUrl("icons/menu.svg")
                     icon.color: Theme.onSurfaceVariant
                     onClicked: page.sidebarToggleRequested()
-                    ToolTip.text: "Show sidebar"
+                    ToolTip.text: qsTr("Show sidebar")
                     ToolTip.visible: hovered
                     ToolTip.delay: 400
                 }
@@ -141,7 +141,7 @@ Item {
                                     anchors.fill: parent
                                     hoverEnabled: true
                                 }
-                                ToolTip.text: App.chatE2EE === "yes" ? "End-to-end encrypted" : "Not end-to-end encrypted"
+                                ToolTip.text: App.chatE2EE === "yes" ? qsTr("End-to-end encrypted") : qsTr("Not end-to-end encrypted")
                                 ToolTip.visible: encHover.containsMouse
                                 ToolTip.delay: 400
                             }
@@ -271,7 +271,7 @@ Item {
             color: Theme.surfaceContainer
             Label {
                 anchors.centerIn: parent
-                text: "You can't send messages to this group"
+                text: qsTr("You can't send messages to this group")
                 color: Theme.onSurfaceVariant
                 font.pixelSize: 13
             }

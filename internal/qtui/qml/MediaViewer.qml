@@ -57,7 +57,7 @@ Dialog {
         onAccepted: {
             Bridge.cmd("saveMedia", {jid: App.chatJID, msgId: dlg.msgId,
                 dest: String(saveDlg.selectedFile).replace(/^file:\/\//, "")}, function(ok, d, e) {
-                Bridge.cmd("notify", {msg: ok ? "Saved to " + d.path : "Save failed: " + e});
+                Bridge.cmd("notify", {msg: ok ? qsTr("Saved to %1").arg(d.path) : qsTr("Save failed: %1").arg(e)});
             });
         }
     }

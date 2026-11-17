@@ -6,7 +6,7 @@ package core
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"os"
 	"sync"
@@ -14,6 +14,7 @@ import (
 
 	"github.com/frontyard/whodat/internal/call"
 	"github.com/frontyard/whodat/internal/config"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	"github.com/frontyard/whodat/internal/store"
 )
@@ -220,7 +221,7 @@ func (a *App) Accounts() []AccountInfo {
 func (a *App) AddAccount(ctx context.Context, proto string) (protocol.Service, error) {
 	b, ok := protocol.BackendOf(proto)
 	if !ok {
-		return nil, fmt.Errorf("unknown protocol %q", proto)
+		return nil, errors.New(i18n.T("unknown protocol %1", proto))
 	}
 	// The whole check → allocate → register path must hold the lock: two
 	// concurrent calls would otherwise pick the same account id and the
@@ -236,7 +237,7 @@ func (a *App) AddAccount(ctx context.Context, proto string) (protocol.Service, e
 	}
 	if live > 0 && !b.Multi {
 		a.svcMu.Unlock()
-		return nil, fmt.Errorf("only one %s account is supported", b.Name)
+		return nil, errors.New(i18n.T("only one %1 account is supported", b.Name))
 	}
 	svc, err := b.New(ctx, protocol.NextAcct(b.AcctBase, taken), a.DataDir, a.DB, a.Bus)
 	if err != nil {
@@ -375,7 +376,7 @@ func (a *App) MediaPath(ctx context.Context, m *store.Message) (string, error) {
 	}
 	svc := a.SvcFor(m.ChatJID)
 	if svc == nil || !svc.CanFetchMedia(m) {
-		return "", fmt.Errorf("no media ref for download")
+		return "", errors.New(i18n.T("no media ref for download"))
 	}
 	return svc.FetchMedia(ctx, m)
 }

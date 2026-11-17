@@ -20,6 +20,7 @@ import (
 	waLog "github.com/polymorfa/hypermeow/util/log"
 
 	"github.com/frontyard/whodat/internal/config"
+	"github.com/frontyard/whodat/internal/i18n"
 	"github.com/frontyard/whodat/internal/protocol"
 	appstore "github.com/frontyard/whodat/internal/store"
 )
@@ -39,7 +40,7 @@ func init() {
 		Name:     "WhatsApp",
 		AcctBase: acctBase,
 		Multi:    true, // every stored id carries the account prefix
-		ScanHint: "Scan the QR code with WhatsApp → Linked devices.",
+		ScanHint: i18n.T("Scan the QR code with WhatsApp → Linked devices."),
 		New: func(ctx context.Context, acct, dataDir string, db *appstore.DB, bus *protocol.Bus) (protocol.Service, error) {
 			return New(ctx, acct, dataDir, db, bus)
 		},
@@ -101,11 +102,11 @@ func New(ctx context.Context, acct, dataDir string, db *appstore.DB, bus *Bus) (
 	container, err := sqlstore.New(ctx, "sqlite",
 		fmt.Sprintf("file:%s?_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)", waDB), log)
 	if err != nil {
-		return nil, fmt.Errorf("open session store: %w", err)
+		return nil, fmt.Errorf("%s: %w", i18n.T("open session store"), err)
 	}
 	device, err := container.GetFirstDevice(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("get device: %w", err)
+		return nil, fmt.Errorf("%s: %w", i18n.T("get device"), err)
 	}
 	s := &Service{
 		sink:      protocol.NewSink(acct, db, bus),
@@ -186,7 +187,7 @@ func (s *Service) jid(id appstore.PeerID) (types.JID, error) {
 	// device part "1234:40@…") means the id is already in wire form.
 	if acct != "" && acct[0] >= 'a' && acct[0] <= 'z' {
 		if acct != s.acct {
-			return types.JID{}, fmt.Errorf("foreign account id %q (owned by %q, this is %q)", id, acct, s.acct)
+			return types.JID{}, errors.New(i18n.T("foreign account id %1 (owned by %2, this is %3)", id, acct, s.acct))
 		}
 		return ParseJID(id.Wire())
 	}
@@ -280,7 +281,7 @@ func (s *Service) startQR(ctx context.Context) error {
 // PairWithPhone requests an 8-digit pairing code (call after Connect while unpaired).
 func (s *Service) PairWithPhone(ctx context.Context, phone string) (string, error) {
 	if s.Paired() {
-		return "", errors.New("already paired")
+		return "", errors.New(i18n.T("already paired"))
 	}
 	return s.Client().PairPhone(ctx, phone, true, whatsmeow.PairClientFirefox, "Firefox (Linux)")
 }
@@ -417,7 +418,7 @@ func (s *Service) Reset(ctx context.Context) error {
 	s.Client().Disconnect()
 	device, err := s.container.GetFirstDevice(ctx)
 	if err != nil {
-		return fmt.Errorf("get device: %w", err)
+		return fmt.Errorf("%s: %w", i18n.T("get device"), err)
 	}
 	s.client.Store(whatsmeow.NewClient(device, s.log))
 	s.Client().AddEventHandler(s.dispatch)
@@ -624,7 +625,7 @@ func (s *Service) dispatch(evt any) {
 					SenderJID: s.cid(info.Sender.ToNonAD().String()), SenderName: info.PushName,
 					TS: info.Timestamp, FromMe: info.IsFromMe,
 					Type: appstore.TSystem,
-					Text: "Couldn't decrypt this message — it may arrive after a resync",
+					Text: i18n.T("Couldn't decrypt this message — it may arrive after a resync"),
 				}
 				s.persistMessage(ctx, m, jidKind(info.Chat), false)
 			})
@@ -639,7 +640,7 @@ func (s *Service) dispatch(evt any) {
 			if !s.db.HasRealMessages(ctx, jid) {
 				return
 			}
-			text := "Security code changed for this chat"
+			text := i18n.T("Security code changed for this chat")
 			if s.db.RecentSystemText(ctx, jid, text, time.Now().Add(-24*time.Hour)) {
 				return
 			}
@@ -667,9 +668,9 @@ func (s *Service) onGroupMembership(ctx context.Context, e *events.GroupInfo, ji
 	byOther := e.Sender != nil && !self[e.Sender.ToNonAD()]
 	for _, j := range e.Join {
 		if self[j.ToNonAD()] {
-			text := "You joined"
+			text := i18n.T("You joined")
 			if byOther {
-				text = "You were added"
+				text = i18n.T("You were added")
 			}
 			s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, false, text) })
 			return
@@ -677,16 +678,16 @@ func (s *Service) onGroupMembership(ctx context.Context, e *events.GroupInfo, ji
 	}
 	for _, j := range e.Leave {
 		if self[j.ToNonAD()] {
-			text := "You left"
+			text := i18n.T("You left")
 			if byOther {
-				text = "You were removed"
+				text = i18n.T("You were removed")
 			}
 			s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, true, text) })
 			return
 		}
 	}
 	if e.Delete != nil {
-		s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, true, "This group was deleted") })
+		s.dbDo(func(ctx context.Context) { s.applyMembership(ctx, jid, true, i18n.T("This group was deleted")) })
 	}
 }
 
