@@ -12,9 +12,8 @@ description: |
 homepage: https://github.com/frontyard/whodat
 license: GPL-3.0-or-later
 
-deb:
-  fields:
-    Installed-Size: 49000
+# No deb: block — nfpm emits Installed-Size itself; a deb.fields override
+# would produce a duplicate field that dpkg rejects.
 
 rpm:
   group: Applications/Internet
