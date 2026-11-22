@@ -315,7 +315,7 @@ func jsString(arg string) (string, bool) {
 			b.WriteByte('\r')
 		case 'u':
 			if i+4 < len(body) {
-				if v, err := strconv.ParseUint(body[i+1:i+5], 16, 32); err == nil {
+				if v, err := strconv.ParseUint(body[i+1:i+5], 16, 16); err == nil {
 					b.WriteRune(rune(v))
 					i += 4
 					continue
