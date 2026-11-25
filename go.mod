@@ -11,7 +11,7 @@ require (
 	github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
 	github.com/suhwr/meowcaller v0.0.0-20261101042713-a97c8fecdfc0
 	golang.org/x/image v0.48.0
-	golang.org/x/net v0.62.0
+	golang.org/x/net v0.63.0
 	google.golang.org/protobuf v1.36.12
 	modernc.org/sqlite v1.62.0
 )
@@ -39,7 +39,7 @@ require (
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rs/zerolog v1.35.1 // indirect
 	go.mau.fi/util v0.11.0 // indirect
-	golang.org/x/crypto v0.58.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
 	golang.org/x/exp v0.0.0-20261014143641-f0251eb4aa3e // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/sys v0.50.0 // indirect
